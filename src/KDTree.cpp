@@ -17,6 +17,7 @@
 
 #include <KDTree.h>
 #include <nanoflann.hpp>
+using r3d::Vec3f;
 using r3d::Mesh;
 using r3d::KDTree;
 using r3d::MeshPoints;

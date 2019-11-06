@@ -21,6 +21,7 @@
 using r3d::SurfaceLocalPlanePathFinder;
 using r3d::SurfacePathFinder;
 using r3d::KDTree;
+using r3d::Vec3f;
 
 
 SurfaceLocalPlanePathFinder::SurfaceLocalPlanePathFinder( const KDTree& k) : SurfacePathFinder(k) {}

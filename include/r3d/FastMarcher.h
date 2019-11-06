@@ -63,7 +63,6 @@ public:
     using Ptr = std::shared_ptr<FastMarcher>;
     static Ptr create( const FaceAngles&, const SpeedFn& sfn = [](int){return 1.0f;});
     FastMarcher( const FaceAngles&, const SpeedFn& sfn = [](int){return 1.0f;});
-    ~FastMarcher();
 
     inline const Mesh &mesh() const { return _fangles.mesh();}
     inline const FaceAngles &angles() const { return _fangles;}

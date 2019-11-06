@@ -24,6 +24,9 @@ using r3d::BoundaryParser;
 using r3d::TriangleParser;
 using r3d::Mesh;
 using r3d::Face;
+using r3d::Vec3f;
+using r3d::Vec3i;
+using r3d::Vec2i;
 
 FaceParser::FaceParser( const Mesh& m) : _mesh(m), _twisted(false), _bparser(nullptr) {}
 

@@ -260,7 +260,7 @@ int Remesher::_sample( int A, size_t npoints, bool interpolate)
     if ( interpolator)
         delete interpolator;
 
-    return _outmesh->numVtxs();
+    return int(_outmesh->numVtxs());
 }   // end _sample
 
 

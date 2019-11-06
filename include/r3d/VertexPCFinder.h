@@ -24,6 +24,10 @@
 
 #include "r3dTypes.h"
 
+#ifdef _WIN32
+#pragma warning( disable : 4251)
+#endif
+
 namespace r3d {
 
 class r3d_EXPORT VertexPCFinder

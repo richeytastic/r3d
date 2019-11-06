@@ -21,6 +21,7 @@ using r3d::Mesh;
 using r3d::Face;
 using r3d::Vec3f;
 using r3d::Vec6f;
+using r3d::Mat4f;
 
 Bounds::Ptr Bounds::create( const Vec3f& minc, const Vec3f& maxc, const Mat4f& m)
 {

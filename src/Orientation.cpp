@@ -21,6 +21,7 @@ using r3d::Orientation;
 using r3d::PTree;
 using r3d::Vec3f;
 using r3d::Mat4f;
+using r3d::Mat3f;
 
 Orientation::Orientation() : _nvec(0,0,1), _uvec(0,1,0) { }
 

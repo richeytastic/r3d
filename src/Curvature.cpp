@@ -16,12 +16,12 @@
  ************************************************************************/
 
 #include <Curvature.h>
-using r3d::Curvature;
-using r3d::Mesh;
 #include <algorithm>
 #include <cassert>
 #include <cfloat>
 #include <cmath>
+using r3d::Curvature;
+using r3d::Mesh;
 using r3d::Vec3f;
 using r3d::Mat3f;
 
@@ -101,18 +101,18 @@ Curvature::Curvature( Mesh &m)
       _vtxCurvature( m.numVtxs(), 8)
 {
     assert( m.hasSequentialIds());
-    const int NV = m.numVtxs();
-    const int NF = m.numFaces();
+    const size_t NV = m.numVtxs();
+    const size_t NF = m.numFaces();
 
-    for ( int fid = 0; fid < NF; ++fid)
+    for ( size_t fid = 0; fid < NF; ++fid)
         _updateFace( fid, 1.0f);
 
     // Normalise vertex norms
-    for ( int i = 0; i < NV; ++i)
+    for ( size_t i = 0; i < NV; ++i)
         _vtxNormals.row(i).normalize();
 
     // Set curvature
-    for ( int i = 0; i < NV; ++i)
+    for ( size_t i = 0; i < NV; ++i)
         _setVertexCurvature( i);
 }   // end ctor
 

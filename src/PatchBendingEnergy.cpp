@@ -22,6 +22,7 @@ using r3d::PatchBendingEnergy;
 using r3d::Mesh;
 using r3d::VecXf;
 using r3d::MatXf;
+using r3d::MatX3f;
 
 namespace {
 size_t setCoordinateVectors( const Mesh &mesh, const IntSet &vset, VecXf &x, VecXf &y, VecXf &z)
@@ -80,9 +81,9 @@ PatchBendingEnergy::PatchBendingEnergy( const Mesh &m, const Mesh &n) : _m(m), _
 float PatchBendingEnergy::operator()( const IntSet& p, const IntSet& q) const
 {
     VecXf qx, qy, qz;
-    const int m = setCoordinateVectors( _n, q, qx, qy, qz);
-    assert( m == (int)p.size());
-    if ( m != (int)p.size())
+    const size_t m = setCoordinateVectors( _n, q, qx, qy, qz);
+    assert( m == p.size());
+    if ( m != p.size())
         return -1;
 
     VecXf px, py, pz;
