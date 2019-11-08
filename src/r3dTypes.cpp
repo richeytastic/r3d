@@ -138,3 +138,25 @@ bool r3d::isPointOnBothLineSegments( const Vec3f& p0, const Vec3f& p1,
     const float d3 = (x-q1).squaredNorm();
     return d0 <= np && d1 <= np && d2 <= nq && d3 <= nq;
 }   // end isPointOnBothLineSegments
+
+
+Vec3f r3d::transform( const Mat4f &M, const Vec3f &p) { return (M * Vec4f( p[0], p[1], p[2], 1)).segment<3>(0);}
+Vec3d r3d::transform( const Mat4d &M, const Vec3d &p) { return (M * Vec4d( p[0], p[1], p[2], 1)).segment<3>(0);}
+
+
+float r3d::calcArea( const Vec3f &a, const Vec3f &b) { return a.cross(b).norm() / 2;}
+float r3d::calcArea( const Vec3f &a, const Vec3f &b, const Vec3f &c) { return calcArea( (a-c), (b-c));}
+
+
+Vec3f r3d::calcBarycentric( const Vec3f &A, const Vec3f &B, const Vec3f &C, const Vec3f &P)
+{
+    const Vec3f PC = P-C;
+    const Vec3f AC = A-C;
+    const Vec3f BC = B-C;
+    const float denom = (A-B).cross(AC).norm();    // Area of parallelogram but no need to divide by 2 since they cancel.
+    const float u = PC.cross(BC).norm() / denom;
+    const float v = AC.cross(PC).norm() / denom;
+    Vec3f vec;
+    vec << u, v, 1-u-v;
+    return vec;
+}   // end calcBarycentric

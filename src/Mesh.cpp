@@ -1153,7 +1153,7 @@ Vec3f Mesh::projectToFacePlane( int fid, const Vec3f &P) const
     const Vec3f pa = P - A;
     const Vec3f z = calcFaceNorm( fid);     // Direction doesn't matter
     // If pa is colinear with z (should be extremely rare if P is random), then P projects to A.
-    if ( fabsf( pa.dot(z) == 1))
+    if ( fabsf( pa.dot(z)) == 1)
         return A;
 
     Vec3f u = z.cross(pa).cross(z);

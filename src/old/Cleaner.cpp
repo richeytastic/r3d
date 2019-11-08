@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ************************************************************************/
 
-#include <ObjModelCleaner.h>
+#include <Cleaner.h>
 #include <FeatureUtils.h>
 #include <cassert>
 #include <cstring>

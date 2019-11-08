@@ -31,7 +31,7 @@ public:
 
     // Reflect an arbitrary point through the given plane defined by point and plane vector.
     // NB planev MUST BE NORMALIZED before calling this function!
-    static void reflectPoint( Vec3f&, const Vec3f& point, const Vec3f& planev);
+    static Vec3f reflectPoint( const Vec3f &toReflect, const Vec3f &planePoint, const Vec3f& planeVector);
 
 private:
     Mesh::Ptr _mesh;

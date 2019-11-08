@@ -79,9 +79,9 @@ void Bounds::_init( const Mesh& mesh, const Mat4f& m, const IntSet& vidxs)
 void Bounds::_calcExtents()
 {
     // Get the unit vectors along the edges of the cuboid in three directions
-    Vec3f ux = _tmat.col(0).segment<3>(0);
-    Vec3f uy = _tmat.col(1).segment<3>(0);
-    Vec3f uz = _tmat.col(2).segment<3>(0);
+    Vec3f ux = _tmat.block<3,1>(0,0);
+    Vec3f uy = _tmat.block<3,1>(0,1);
+    Vec3f uz = _tmat.block<3,1>(0,2);
     ux.normalize();
     uy.normalize();
     uz.normalize();

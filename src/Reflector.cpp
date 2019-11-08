@@ -24,10 +24,10 @@ using r3d::Vec3f;
 Reflector::Reflector( Mesh::Ptr mesh) : _mesh(mesh) {}
 
 
-void Reflector::reflectPoint( Vec3f& v, const Vec3f& pt, const Vec3f& pvec)
+Vec3f Reflector::reflectPoint( const Vec3f& v, const Vec3f& pt, const Vec3f& pvec)
 {
     const float d = pvec.dot( pt - v);  // Project to plane vector to give orthogonal distance to plane
-    v = v + 2.0f * d * pvec;            // Reflect point through plane
+    return v + 2.0f * d * pvec;         // Reflect point through plane
 }   // end reflectPoint
                                                         
 

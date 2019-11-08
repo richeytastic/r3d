@@ -51,11 +51,11 @@ Mat4f Orientation::asMatrix( const Vec3f &t) const
 {
     Vec3f xvec = _uvec.cross(_nvec);
     xvec.normalize();
-    Mat4f T;
-    T.col(0) << xvec, 0.0f;
-    T.col(1) << _uvec, 0.0f;
-    T.col(2) << _nvec, 0.0f;
-    T.col(3) << t, 1.0f;
+    Mat4f T = Mat4f::Identity();
+    T.block<3,1>(0,0) = xvec;
+    T.block<3,1>(0,1) = _uvec;
+    T.block<3,1>(0,2) = _nvec;
+    T.block<3,1>(0,3) = t;
     return T;
 }   // end asMatrix
 

@@ -134,38 +134,15 @@ r3d_EXPORT bool isPointOnBothLineSegments( const Vec3f& v0, const Vec3f& v1, // 
                                            float TOLERANCE=0);   // Increase segment length by this much at both ends
 
 
-template <typename T>
-Eigen::Matrix<T, 3, 1> transform( const Eigen::Matrix<T, 4, 4> &M, const Eigen::Matrix<T, 3, 1> &p)
-{
-    auto r = M * Eigen::Matrix<T, 4, 1>( p[0], p[1], p[2], 1);
-    return r.head(3);
-}   // end transform
+r3d_EXPORT Vec3f transform( const Mat4f &M, const Vec3f &p);
+r3d_EXPORT Vec3d transform( const Mat4d &M, const Vec3d &p);
 
 
-template <typename T>
-T calcArea( const Eigen::Matrix<T,3,1> &a, const Eigen::Matrix<T,3,1> &b) { return a.cross(b).norm() / 2;}
+r3d_EXPORT float calcArea( const Vec3f &a, const Vec3f &b);
+r3d_EXPORT float calcArea( const Vec3f &a, const Vec3f &b, const Vec3f &c);
 
 
-template <typename T>
-T calcArea( const Eigen::Matrix<T,3,1> &a, const Eigen::Matrix<T,3,1> &b, const Eigen::Matrix<T,3,1> &c) { return calcArea<T>( (a-c), (b-c));}
-
-
-template <typename T>
-Eigen::Matrix<T, 3, 1> calcBarycentric( const Eigen::Matrix<T, 3, 1> &A,
-                                        const Eigen::Matrix<T, 3, 1> &B,
-                                        const Eigen::Matrix<T, 3, 1> &C,
-                                        const Eigen::Matrix<T, 3, 1> &P)
-{
-    const auto PC = P-C;
-    const auto AC = A-C;
-    const auto BC = B-C;
-    const T denom = (A-B).cross(AC).norm();    // Area of parallelogram but no need to divide by 2 since they cancel.
-    const T u = PC.cross(BC).norm() / denom;
-    const T v = AC.cross(PC).norm() / denom;
-    Eigen::Matrix<T, 3, 1> vec;
-    vec << u, v, 1-u-v;
-    return vec;
-}   // end calcBarycentric
+r3d_EXPORT Vec3f calcBarycentric( const Vec3f &A, const Vec3f &B, const Vec3f &C, const Vec3f &P);
 
 
 template <typename T>

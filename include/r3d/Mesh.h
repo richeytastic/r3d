@@ -554,7 +554,7 @@ public:
     int oppositeFace( int fid, int v0, int v1) const;
 
     /**
-     * Create the Eigen feature and face matrices from this object. Note that if using MeshCurvature,
+     * Create the Eigen feature and face matrices from this object. Note that if using r3d::Curvature,
      * it will be more efficient to use the normals from there rather than recalculating them again here.
      * The vertex positions copied over are the raw UNTRANSFORMED positions.
      */
