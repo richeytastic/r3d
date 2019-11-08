@@ -9,3 +9,5 @@ For IO and visualisation, please see the [r3dio](../../../r3dio) and [r3dvis](..
 - [OpenCV 4.1.1](http://opencv.org)
 - [OpenCV Extra Modules](https://github.com/opencv/opencv_contrib)
 - [nanoflann](https://github.com/jlblancoc/nanoflann)
+
+Download [libbuild](../../../libbuild) for easy build and install of this library.
