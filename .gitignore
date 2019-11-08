@@ -29,7 +29,7 @@
 
 *~
 
-cmake/
+cmake
 test/
 testing/
 compile_commands.json
