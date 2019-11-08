@@ -164,7 +164,7 @@ Mesh::Ptr Mesh::fromVertexSubset( const Mesh &src, const IntSet &vidxs)
 
 
 // private
-Mesh::Mesh() : _vCounter(0), _fCounter(0), _eCounter(0), _mCounter(0), _tmat(Mat4f::Identity()) {}
+Mesh::Mesh() : _vCounter(0), _fCounter(0), _eCounter(0), _mCounter(0), _tmat(Mat4f::Identity()), _imat(Mat4f::Identity()) {}
 
 
 // private

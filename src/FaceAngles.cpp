@@ -50,7 +50,7 @@ FaceAngles::FaceAngles( const Mesh& m) : _mesh(m), _fangles( m.numFaces(), 3)
     const size_t N = m.numFaces();
     for ( size_t i = 0; i < N; ++i)
     {
-        const int *fvidxs = m.fvidxs(i);
+        const int *fvidxs = m.fvidxs(int(i));
         const Vec3f v02 = m.uvtx(fvidxs[0]) - m.uvtx(fvidxs[2]);
         const Vec3f v10 = m.uvtx(fvidxs[1]) - m.uvtx(fvidxs[0]);
         const Vec3f v21 = m.uvtx(fvidxs[2]) - m.uvtx(fvidxs[1]);
