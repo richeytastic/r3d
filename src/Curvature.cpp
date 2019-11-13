@@ -101,23 +101,23 @@ Curvature::Curvature( Mesh &m)
       _vtxCurvature( m.numVtxs(), 8)
 {
     assert( m.hasSequentialIds());
-    const size_t NV = m.numVtxs();
-    const size_t NF = m.numFaces();
+    const int NV = int(m.numVtxs());
+    const int NF = int(m.numFaces());
 
-    for ( size_t fid = 0; fid < NF; ++fid)
+    for ( int fid = 0; fid < NF; ++fid)
         _updateFace( fid, 1.0f);
 
     // Normalise vertex norms
-    for ( size_t i = 0; i < NV; ++i)
+    for ( int i = 0; i < NV; ++i)
         _vtxNormals.row(i).normalize();
 
     // Set curvature
-    for ( size_t i = 0; i < NV; ++i)
+    for ( int i = 0; i < NV; ++i)
         _setVertexCurvature( i);
 }   // end ctor
 
 
-void Curvature::adjustVertex( int vidx, const Vec3f &npos)
+void Curvature::adjustRawVertex( int vidx, const Vec3f &npos)
 {
     const IntSet &fids = _mesh.faces(vidx);     // Associated polys
 
@@ -125,8 +125,8 @@ void Curvature::adjustVertex( int vidx, const Vec3f &npos)
     for ( int fid : fids)
         _updateFace( fid, -1.0f);
 
-    // Update the vertex's position
-    _mesh.adjustVertex( vidx, npos[0], npos[1], npos[2]);
+    // Update the vertex's raw (untransformed) position
+    _mesh.adjustRawVertex( vidx, npos);
 
     // Add back in new values for the associated vertices and faces
     for ( int fid : fids)
@@ -143,7 +143,7 @@ void Curvature::adjustVertex( int vidx, const Vec3f &npos)
     _setVertexCurvature( vidx);
     for ( int i : cvtxs)
         _setVertexCurvature( i);
-}   // end adjustVertex
+}   // end adjustRawVertex
 
 
 void Curvature::_setVertexCurvature( int vi)

@@ -29,6 +29,7 @@ using r3d::Mesh;
 using r3d::Face;
 using r3d::Edge;
 using r3d::Material;
+using r3d::Vec2i;
 using r3d::Vec2f;
 using r3d::Vec3f;
 using r3d::Mat4f;
@@ -39,7 +40,7 @@ using r3d::FaceMat;
 
 namespace {
 static const IntSet EMPTY_INT_SET;
-static const size_t HASH_NDP = 4;
+static const size_t HASH_NDP = 4;   // KEEP THIS AS 4!!!!
 }   // end namespace
 
 
@@ -145,7 +146,7 @@ Mesh::Ptr Mesh::create()
 Mesh::Ptr Mesh::fromVertices( const MatX3f &vrows)
 {
     Mesh *m = new Mesh;
-    const int n = vrows.rows();
+    const int n = int(vrows.rows());
     for ( int i = 0; i < n; ++i)
         m->addVertex( vrows.row(i));
     return Ptr( m, [](Mesh *x){delete x;});
@@ -355,20 +356,20 @@ void Mesh::_removeFaceUVs( int mid, int fid)
 int Mesh::addVertex( float x, float y, float z) { return addVertex( Vec3f(x,y,z));}
 
 
-int Mesh::addVertex( const Vec3f &v)
+int Mesh::addVertex( const Vec3f &V)
 {
-#ifndef NDEBUG
-    if ( _tmat != Mat4f::Identity())
-        std::cerr << "[WARNING] r3d::Mesh::addVertex: transform is not Identity!" << std::endl;
-#endif
-
-    if ( v.array().isNaN().any())
+    if ( V.array().isNaN().any())
     {
 #ifndef NDEBUG
         std::cerr << "[WARNING] r3d::Mesh::addVertex: vertex is NaN!" << std::endl;
 #endif
         return -1;
     }   // end if
+
+    if ( !hasFixedTransform())
+        std::cerr << "[WARNING] r3d::Mesh::addVertex: transform is not Identity!" << std::endl;
+
+    const Vec3f v = transform( _imat, V);
 
     size_t key = hash( v, HASH_NDP);
     if ( _v2id.count( key) > 0)
@@ -414,9 +415,9 @@ Vec2f Mesh::calcTextureCoords( int fidx, const Vec3f &p) const
         return Vec2f(-1,-1);
 
     const int *vidxs = fvidxs(fidx);
-    const Vec3f &v0 = vtx(vidxs[0]);
-    const Vec3f &v1 = vtx(vidxs[1]);
-    const Vec3f &v2 = vtx(vidxs[2]);
+    const Vec3f &v0 = uvtx(vidxs[0]);
+    const Vec3f &v1 = uvtx(vidxs[1]);
+    const Vec3f &v2 = uvtx(vidxs[2]);
 
     // Calculate and return the barycentric coordinates for the point
     Vec3f bcds = calcBarycentric( v0, v1, v2, p);
@@ -431,18 +432,18 @@ Vec2f Mesh::calcTextureCoords( int fidx, const Vec3f &p) const
 }   // end calcTextureCoords
 
 
-bool Mesh::adjustVertex( int vidx, float x, float y, float z) { return adjustVertex( vidx, Vec3f(x,y,z));}
+bool Mesh::adjustRawVertex( int vidx, float x, float y, float z) { return adjustRawVertex( vidx, Vec3f(x,y,z));}
 
 
-bool Mesh::adjustVertex( int vidx, const Vec3f &v)
+bool Mesh::adjustRawVertex( int vidx, const Vec3f &v)
 {
-    if ( v.array().isNaN().any())
-        return false;
-
     if ( _vids.count(vidx) == 0)
         return false;
 
-    Vec3f &vec = _vtxs.at(vidx);   // The vertex to modify
+    if ( v.array().isNaN().any())
+        return false;
+
+    Vec3f &vec = _vtxs.at(vidx);       // The vertex to modify
     size_t h = hash(vec, HASH_NDP);    // Existing hash
     assert( _v2id.count(h) > 0);
     _v2id.erase( h); // Remove original vertex hash value
@@ -454,7 +455,7 @@ bool Mesh::adjustVertex( int vidx, const Vec3f &v)
     _tvtxs.erase(vidx); // Force recalculation of cached vertex
 
     return true;
-}   // end adjustVertex
+}   // end adjustRawVertex
 
 
 bool Mesh::scaleVertex( int vidx, float sf)
@@ -464,6 +465,9 @@ bool Mesh::scaleVertex( int vidx, float sf)
 
     if ( _vids.count(vidx) == 0)
         return false;
+
+    if ( !hasFixedTransform())
+        std::cerr << "[WARNING] r3d::Mesh::scaleVertex: transform is not Identity!" << std::endl;
 
     Vec3f &vec = _vtxs.at(vidx);   // The vertex to modify
     const size_t h = hash(vec, HASH_NDP);
@@ -490,6 +494,9 @@ int Mesh::edgeId( int v0, int v1) const
         return -1;
     return _e2id.at(ledge);
 }   // end edgeId
+
+
+int Mesh::edgeId( const Vec2i &e) const { return edgeId( e[0], e[1]);}
 
 
 int Mesh::_connectEdge( int v0, int v1)
@@ -797,31 +804,26 @@ void Mesh::reverseFaceVertices( int fid)
 }   // end reverseFaceVertices
 
 
-namespace {
-Vec3f calcFaceCrossProduct( const Mesh &mesh, int fid)
-{
-    assert( mesh.faces().count(fid) > 0);
-    const int *vids = mesh.fvidxs(fid);
-    const Vec3f &vA = mesh.vtx(vids[0]);
-    const Vec3f &vB = mesh.vtx(vids[1]);
-    const Vec3f &vC = mesh.vtx(vids[2]);
-    return (vB - vA).cross( vC - vB);
-}   // end calcFaceCrossProduct
-}   // end namespace
-
-
 Vec3f Mesh::calcFaceNorm( int fid) const
 {
-    Vec3f nrm = calcFaceCrossProduct( *this, fid);
+    Vec3f nrm = calcFaceVector( fid);
     nrm.normalize();
     return nrm;
 }   // end calcFaceNorm
 
 
-float Mesh::calcFaceArea( int fid) const
+Vec3f Mesh::calcFaceVector( int fid) const
 {
-    return calcFaceCrossProduct( *this, fid).norm() / 2;
-}   // end calcFaceArea
+    assert( faces().count(fid) > 0);
+    const int *vids = fvidxs(fid);
+    const Vec3f &vA = uvtx(vids[0]);
+    const Vec3f &vB = uvtx(vids[1]);
+    const Vec3f &vC = uvtx(vids[2]);
+    return (vB - vA).cross( vC - vB);
+}   // end calcFaceVector
+
+
+float Mesh::calcFaceArea( int fid) const { return calcFaceVector( fid).norm() / 2;}
 
 
 bool Mesh::removeEdge( int ei)
@@ -842,12 +844,13 @@ bool Mesh::removeEdge( int ei)
 
 bool Mesh::removeEdge( int vi, int vj) { return removeEdge( edgeId( vi, vj));}
 
-/*
-// public
-int Mesh::subDivideFace( int fidx, const cv::Vec3f& v)
+
+int Mesh::subdivideFace( int fidx, const Vec3f& V)
 {
     if ( _faces.count(fidx) == 0)
         return -1;
+
+    const Vec3f v = transform( _imat, V);
 
     const int nvidx = addVertex(v);   // New vertex added
     const int* vidxs = fvidxs(fidx);
@@ -862,10 +865,10 @@ int Mesh::subDivideFace( int fidx, const cv::Vec3f& v)
     if ( matId >= 0)
     {
         const int* uvs = faceUVs( fidx);
-        const cv::Vec2f& uv0 = uv( matId, uvs[0]);
-        const cv::Vec2f& uv1 = uv( matId, uvs[1]);
-        const cv::Vec2f& uv2 = uv( matId, uvs[2]);
-        const cv::Vec2f uvn = calcTextureCoords( fidx, v);
+        const Vec2f& uv0 = uv( matId, uvs[0]);
+        const Vec2f& uv1 = uv( matId, uvs[1]);
+        const Vec2f& uv2 = uv( matId, uvs[2]);
+        const Vec2f uvn = calcTextureCoords( fidx, v);
 
         setOrderedFaceUVs( matId, fid01, uv0, uv1, uvn);
         setOrderedFaceUVs( matId, fid12, uv1, uv2, uvn);
@@ -875,11 +878,11 @@ int Mesh::subDivideFace( int fidx, const cv::Vec3f& v)
     // Finally, remove the old face.
     removeFace(fidx);
     return nvidx;
-}   // end subDivideFace
+}   // end subdivideFace
 
-
+/*
 // public
-int Mesh::subDivideFace( int fidx, int *nfidxs)
+int Mesh::subdivideFace( int fidx, int *nfidxs)
 {
     if ( _faces.count(fidx) == 0)
         return -1;
@@ -928,11 +931,11 @@ int Mesh::subDivideFace( int fidx, int *nfidxs)
     }   // end if
 
     return nf0;
-}   // end subDivideFace
+}   // end subdivideFace
 
 
 // public
-bool Mesh::subDivideEdge( int vi, int vj, int vn)
+bool Mesh::subdivideEdge( int vi, int vj, int vn)
 {
     const IntSet& sfids = sfaces( vi, vj);
     if ( sfids.empty())
@@ -993,7 +996,7 @@ bool Mesh::subDivideEdge( int vi, int vj, int vn)
     const int eid = edgeId( vi, vj);
     _removeEdge( eid); // Finally, remove the old faces attached to the edge
     return true;
-}   // end subDivideEdge
+}   // end subdivideEdge
 */
 
 
@@ -1149,16 +1152,17 @@ bool Mesh::flipFacePair( int vi, int vj)
 
 Vec3f Mesh::projectToFacePlane( int fid, const Vec3f &P) const
 {
-    const Vec3f &A = vtx(fvidxs(fid)[0]);   // Origin vertex
-    const Vec3f pa = P - A;
+    const Vec3f p = transform( _imat, P);
+    const Vec3f &A = uvtx(fvidxs(fid)[0]);   // Origin vertex (untransformed)
+    const Vec3f pa = p - A;
     const Vec3f z = calcFaceNorm( fid);     // Direction doesn't matter
     // If pa is colinear with z (should be extremely rare if P is random), then P projects to A.
     if ( fabsf( pa.dot(z)) == 1)
-        return A;
+        return vtx(fvidxs(fid)[0]); // Origin vertex (transformed)
 
     Vec3f u = z.cross(pa).cross(z);
     u.normalize();  // Make u unit length for projection of pa 
-    return A + pa.dot(u)*u; // Return projection of pa along u.
+    return transform( _tmat, A + pa.dot(u)*u); // Return projection of pa along u.
 }   // end projectToFacePlane
 
 
@@ -1281,12 +1285,14 @@ float calcBaseNorm( const Vec3f& bv, const Vec3f& p, Vec3f& w)
 }   // end namespace
 
 
-Vec3f Mesh::toPropFromAbs( int fid, const Vec3f &vx) const
+Vec3f Mesh::toPropFromAbs( int fid, const Vec3f &vX) const
 {
+    const Vec3f vx = transform( _imat, vX);
+
     const int *vidxs = fvidxs(fid);
-    const Vec3f &v0 = vtx( vidxs[0]);
-    const Vec3f &v1 = vtx( vidxs[1]);
-    const Vec3f &v2 = vtx( vidxs[2]);
+    const Vec3f &v0 = uvtx( vidxs[0]);
+    const Vec3f &v1 = uvtx( vidxs[1]);
+    const Vec3f &v2 = uvtx( vidxs[2]);
 
     const Vec3f vx0 = vx - v0;
     const Vec3f v10 = v1 - v0;
@@ -1321,20 +1327,22 @@ Vec3f Mesh::toPropFromAbs( int fid, const Vec3f &vx) const
     const float A = H*nv10;             // This is twice the area of the triangle
     const float zdist = z.dot(vx0);     // Projected distance off the triangle's surface in direction of normal
     const float zprop = A > 0 ? zdist / sqrt(A) : 0; // sqrt because distance needs to scale linearly (obviously)
-    return Vec3f( xprop, yprop, zprop);
+    return transform( _tmat, Vec3f( xprop, yprop, zprop));
 }   // end toPropFromAbs
 
 
 Vec3f Mesh::toAbsFromProp( int fid, const Vec3f &vp) const
 {
+    const Vec3f np = transform( _imat, vp);
     const int *vidxs = fvidxs(fid);
-    const Vec3f &v0 = vtx( vidxs[0]);
-    const Vec3f &v1 = vtx( vidxs[1]);
-    const Vec3f &v2 = vtx( vidxs[2]);
-    Vec3f z = calcFaceCrossProduct( *this, fid);
+    const Vec3f &v0 = uvtx( vidxs[0]);
+    const Vec3f &v1 = uvtx( vidxs[1]);
+    const Vec3f &v2 = uvtx( vidxs[2]);
+    Vec3f z = calcFaceVector( fid);
     const float A = z.norm();
     z.normalize();
-    return v0 + vp[0]*(v1-v0) + vp[1]*(v2-v1) + vp[2]*sqrtf(A)*z;
+    const Vec3f fp = v0 + np[0]*(v1-v0) + np[1]*(v2-v1) + np[2]*sqrtf(A)*z;
+    return transform( _tmat, fp);
 }   // end toAbsFromProp
 
 
@@ -1436,8 +1444,8 @@ void Mesh::showDebug( bool withDetails) const
 {
     // Print vertex info
     std::cerr << "===============[ r3d::Mesh ]===============" << std::endl;
-    const int nv = numVtxs();
-    const int nf = numFaces();
+    const int nv = int(numVtxs());
+    const int nf = int(numFaces());
 
     if ( withDetails)
     {
@@ -1514,7 +1522,7 @@ void Mesh::showDebug( bool withDetails) const
 MatX3f Mesh::vertices2Matrix() const
 {
     assert( hasSequentialVertexIds());
-    const int N = numVtxs();
+    const int N = int(numVtxs());
     MatX3f M(N, 3);
     for ( int i = 0; i < N; ++i)
         M.row(i) = uvtx(i);
@@ -1528,7 +1536,7 @@ FeatMat Mesh::toFeatures( FaceMat &H) const
     assert( hasSequentialFaceIds());
 
     // Copy in vertex positions and zero out the normal region
-    const int N = numVtxs();
+    const int N = int(numVtxs());
     FeatMat F(N, 6);
     for ( int i = 0; i < N; ++i)
     {
@@ -1537,7 +1545,7 @@ FeatMat Mesh::toFeatures( FaceMat &H) const
     }   // end for
 
     // Copy in face vertex IDs in stored order and calculate and insert the weighted vertex normals
-    const int M = numFaces();
+    const int M = int(numFaces());
     H = FaceMat( M, 3);
     for ( int i = 0; i < M; ++i)
     {
@@ -1564,7 +1572,7 @@ FeatMat Mesh::toFeatures( FaceMat &H) const
 }   // end toFeatures
 
 
-bool Mesh::adjustVertices( const MatX3f &F)
+bool Mesh::adjustRawVertices( const MatX3f &F)
 {
     if ( !hasSequentialVertexIds())
     {
@@ -1572,7 +1580,7 @@ bool Mesh::adjustVertices( const MatX3f &F)
         return false;
     }   // end if
 
-    const int N = numVtxs();
+    const int N = int(numVtxs());
     if ( N != F.rows())
     {
         assert(false);
@@ -1580,10 +1588,10 @@ bool Mesh::adjustVertices( const MatX3f &F)
     }   // end if
 
     for ( int i = 0; i < N; ++i)
-        adjustVertex( i, F.row(i));
+        adjustRawVertex( i, F.row(i));
 
     return true;
-}   // end adjustVertices
+}   // end adjustRawVertices
 
 
 void Mesh::join( const Mesh& mod, bool txs)
@@ -1593,19 +1601,18 @@ void Mesh::join( const Mesh& mod, bool txs)
     assert( hasSequentialIds());
     assert( hasFixedTransform());
 
-    const size_t startVtxId = numVtxs();  // Starting vertex ID on this Mesh
+    std::unordered_map<int,int> vvmap;  // mod.vertexId to this->vertexId
+    const int N = int(mod.numVtxs());
+    for ( int v = 0; v < N; ++v)
+        vvmap[v] = addVertex( mod.uvtx(v));
 
-    const size_t N = mod.numVtxs();
-    for ( size_t v = 0; v < N; ++v)
-        addVertex( mod.uvtx(v));
-
-    const size_t F = mod.numFaces();
-    for ( size_t fid = 0; fid < F; ++fid)
+    const int F = int(mod.numFaces());
+    for ( int fid = 0; fid < F; ++fid)
     {
         const int *fids = mod.fvidxs(fid);
-        const int nv0 = fids[0] + startVtxId;
-        const int nv1 = fids[1] + startVtxId;
-        const int nv2 = fids[2] + startVtxId;
+        const int nv0 = vvmap.at(fids[0]);
+        const int nv1 = vvmap.at(fids[1]);
+        const int nv2 = vvmap.at(fids[2]);
         const int nfid = addFace( nv0, nv1, nv2);
 
         if ( txs)

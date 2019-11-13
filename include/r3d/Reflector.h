@@ -25,8 +25,9 @@ namespace r3d {
 class r3d_EXPORT Reflector
 {
 public:
-    explicit Reflector( Mesh::Ptr);
+    explicit Reflector( Mesh&);
 
+    // Reflect the mesh through the plane defined by the given point and vector.
     void reflect( const Vec3f& point, const Vec3f& planev);
 
     // Reflect an arbitrary point through the given plane defined by point and plane vector.
@@ -34,7 +35,7 @@ public:
     static Vec3f reflectPoint( const Vec3f &toReflect, const Vec3f &planePoint, const Vec3f& planeVector);
 
 private:
-    Mesh::Ptr _mesh;
+    Mesh& _mesh;
 };  // end class
 
 }   // end namespace

@@ -34,6 +34,8 @@ class Manifolds;
 class r3d_EXPORT Manifold
 {
 public:
+    inline const Mesh &mesh() const { return *_mesh;}
+
     // Return the set of faces that define this manifold.
     inline const IntSet& faces() const { return _faces;}
 

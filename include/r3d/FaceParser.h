@@ -58,7 +58,7 @@ struct r3d_EXPORT BoundaryParser
 {
     BoundaryParser() : mesh(nullptr) {}
     virtual ~BoundaryParser(){}
-    virtual bool parseEdge( int fid, const Vec2i&, int& pnfid) = 0;
+    virtual bool parseEdge( int fid, const Vec2i &e, int& pnfid) = 0;
     virtual void finishedParsing(){}   // Be informed when parsing all triangles finished.
     virtual void reset(){}  // Called in FaceParser::setBoundaryParser AFTER mesh set
     const Mesh* mesh;

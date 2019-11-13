@@ -15,33 +15,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ************************************************************************/
 
-#include <ICPAligner.h>
-#include <opencv2/surface_matching/icp.hpp>
-#include <opencv2/core/eigen.hpp>
-using r3d::ICPAligner;
-using r3d::FeatMat;
-using r3d::Mat4f;
+#ifndef R3D_PPF_MATCHER_H
+#define R3D_PPF_MATCHER_H
 
+/**
+ * A variant of ICP using Point Pair Features for model/scene registration.
+ * Must provide normals as well as point locations.
+ */
 
-ICPAligner::ICPAligner( const FeatMat& m) : _tgt( m)
+#include "r3dTypes.h"
+
+namespace r3d {
+
+class r3d_EXPORT PPFMatcher
 {
-}   // end ctor
+public:
+    explicit PPFMatcher( const FeatMat&);
 
+    // Calculate and return the transform to map the given vertices to the constructor target object using ICP.
+    Mat4f operator()( const FeatMat&) const;
 
-Mat4f ICPAligner::operator()( const FeatMat &s) const
-{
-    assert( s.cols() == _tgt.cols());
-    cv::Mat src, tgt;
-    cv::eigen2cv<float>(   s, src);
-    cv::eigen2cv<float>(_tgt, tgt);
+private:
+    const FeatMat &_tgt;
+};  // end class
 
-    double residual;
-    cv::Matx44d pose;
-    cv::ppf_match_3d::ICP icp;
-    icp.registerModelToScene( src, tgt, residual, pose);
+}   // end namespace
 
-    Mat4d epose;
-    cv::cv2eigen<double, 4, 4>( pose, epose);
-
-    return epose.cast<float>();
-}   // end operator()
+#endif

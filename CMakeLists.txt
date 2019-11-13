@@ -37,7 +37,6 @@ set( INCLUDE_FILES
     "${INCLUDE_F}/FunctionMapper.h"
     "${INCLUDE_F}/GlobalPlaneSlicingPath.h"
     "${INCLUDE_F}/HoleFiller.h"
-    "${INCLUDE_F}/ICPAligner.h"
     "${INCLUDE_F}/Image.h"
     "${INCLUDE_F}/Internal.h"
     "${INCLUDE_F}/KDTree.h"
@@ -48,6 +47,7 @@ set( INCLUDE_FILES
     "${INCLUDE_F}/PatchBendingEnergy.h"
     "${INCLUDE_F}/PlaneSlicingPath.h"
     "${INCLUDE_F}/ProcrustesSuperimposition.h"
+    "${INCLUDE_F}/PPFMatcher.h"
     "${INCLUDE_F}/Reflector.h"
     "${INCLUDE_F}/RegionSelector.h"
     "${INCLUDE_F}/Remesher.h"
@@ -86,7 +86,6 @@ set( SRC_FILES
     ${SRC_DIR}/FastMarcher
     ${SRC_DIR}/FunctionMapper
     ${SRC_DIR}/HoleFiller
-    ${SRC_DIR}/ICPAligner
     ${SRC_DIR}/Image
     ${SRC_DIR}/Internal
     ${SRC_DIR}/KDTree
@@ -97,6 +96,7 @@ set( SRC_FILES
     ${SRC_DIR}/PatchBendingEnergy
     ${SRC_DIR}/PlaneSlicingPath
     ${SRC_DIR}/ProcrustesSuperimposition
+    ${SRC_DIR}/PPFMatcher
     ${SRC_DIR}/Reflector
     ${SRC_DIR}/RegionSelector
     ${SRC_DIR}/Remesher

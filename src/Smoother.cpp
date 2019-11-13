@@ -147,7 +147,7 @@ void Smoother::operator()( Curvature& cmap, const IntSet *subset)
         {
             const int vidx = popHeap( heap, vcmap, hcset);  // vidx inserted into hcset and removed from vcmap.
             const Vec3f npos = calcAdjustedVertex( cmap.mesh(), vidx);   // Repositioned as mean of connected vertices.
-            cmap.adjustVertex( vidx, npos);                // Update curvature at the vertex (and vertices connected to it).
+            cmap.adjustRawVertex( vidx, npos);                // Update curvature at the vertex (and vertices connected to it).
 
             // Parse the connected vertices of the newly adjusted vertex since their curvature will have changed.
             for ( int cv : cmap.mesh().cvtxs(vidx))

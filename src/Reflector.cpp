@@ -21,7 +21,7 @@ using r3d::Reflector;
 using r3d::Mesh;
 using r3d::Vec3f;
 
-Reflector::Reflector( Mesh::Ptr mesh) : _mesh(mesh) {}
+Reflector::Reflector( Mesh& mesh) : _mesh(mesh) {}
 
 
 Vec3f Reflector::reflectPoint( const Vec3f& v, const Vec3f& pt, const Vec3f& pvec)
@@ -31,21 +31,23 @@ Vec3f Reflector::reflectPoint( const Vec3f& v, const Vec3f& pt, const Vec3f& pve
 }   // end reflectPoint
                                                         
 
-void Reflector::reflect( const Vec3f& pt, const Vec3f& plane)
+void Reflector::reflect( const Vec3f& Pt, const Vec3f& plane)
 {
     Vec3f pvec = plane; // Ensure plane vector is normalized
     pvec.normalize();
 
-    const IntSet& vids = _mesh->vtxIds();
+    const Vec3f pt = transform( _mesh.inverseTransformMatrix(), Pt);
+    pvec = transform( _mesh.inverseTransformMatrix(), pvec);
+
+    const IntSet& vids = _mesh.vtxIds();
     for ( int vidx : vids)
     {
-        Vec3f v = _mesh->vtx(vidx);    // Copy out
-        reflectPoint( v, pt, pvec);
-        _mesh->adjustVertex( vidx, v);
+        const Vec3f v = reflectPoint( _mesh.uvtx(vidx), pt, pvec);
+        _mesh.adjustRawVertex( vidx, v);
     }   // end for
 
     // Also need to flip normals on all the mesh's faces
-    const IntSet& fids = _mesh->faces();
+    const IntSet& fids = _mesh.faces();
     for ( int fid : fids)
-        _mesh->reverseFaceVertices(fid);
+        _mesh.reverseFaceVertices(fid);
 }   // end reflect

@@ -15,25 +15,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ************************************************************************/
 
-#ifndef R3D_ICP_ALIGNER_H
-#define R3D_ICP_ALIGNER_H
+#include <PPFMatcher.h>
+#include <opencv2/surface_matching/icp.hpp>
+#include <opencv2/core/eigen.hpp>
+using r3d::PPFMatcher;
+using r3d::FeatMat;
+using r3d::Mat4f;
 
-#include "r3dTypes.h"
 
-namespace r3d {
-
-class r3d_EXPORT ICPAligner
+PPFMatcher::PPFMatcher( const FeatMat& m) : _tgt( m)
 {
-public:
-    explicit ICPAligner( const FeatMat&);
+}   // end ctor
 
-    // Calculate and return the transform to map the given vertices to the constructor target object using ICP.
-    Mat4f operator()( const FeatMat&) const;
 
-private:
-    const FeatMat &_tgt;
-};  // end class
+Mat4f PPFMatcher::operator()( const FeatMat &s) const
+{
+    assert( s.cols() == _tgt.cols());
+    cv::Mat src, tgt;
+    cv::eigen2cv<float>(   s, src);
+    cv::eigen2cv<float>(_tgt, tgt);
 
-}   // end namespace
+    double residual;
+    cv::Matx44d pose;
+    cv::ppf_match_3d::ICP icp;
+    icp.registerModelToScene( src, tgt, residual, pose);
 
-#endif
+    Mat4d epose;
+    cv::cv2eigen<double, 4, 4>( pose, epose);
+
+    return epose.cast<float>();
+}   // end operator()

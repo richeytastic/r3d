@@ -98,9 +98,9 @@ r3d_EXPORT cv::Matx44d toCV( const Mat4d&);
 r3d_EXPORT Mat4d toEigen( const cv::Matx44d&);
 
 
-// Find and return the vertex along line segment {xp,x} that intersects plane {p,n} where p is a point
+// Find and return the vertex along line segment {x0,x1} that intersects plane {p,n} where p is a point
 // in the plane and n is a perpendicular normal (unit length) vector pointing into one half of the space.
-r3d_EXPORT Vec3f linePlaneIntersection( const Vec3f &p, const Vec3f &n, const Vec3f &xp, const Vec3f &x);
+r3d_EXPORT Vec3f linePlaneIntersection( const Vec3f &p, const Vec3f &n, const Vec3f &x0, const Vec3f &x1);
 
 
 // v0 = a-i

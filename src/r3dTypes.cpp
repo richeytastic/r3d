@@ -70,12 +70,17 @@ Mat4d r3d::toEigen( const cv::Matx44d &m)
 }   // end toEigen
 
 
-Vec3f r3d::linePlaneIntersection( const Vec3f& p, const Vec3f& n, const Vec3f& xp, const Vec3f& x)
+Vec3f r3d::linePlaneIntersection( const Vec3f& p, const Vec3f& n, const Vec3f& xroot, const Vec3f& xtest)
 {
-    const Vec3f xv = xp-x;
-    return xp - xv * (xp-p).dot(n) / xv.dot(n);
+    static const float EPS = 1e-4f; // DO NOT CHANGE TO ANY LOWER!
+    const Vec3f vtr = xtest - xroot;
+    float w = n.dot(vtr);  // Could be zero
+    if ( fabsf(w) > EPS)
+        w = (w - (xtest - p).dot(n)) / w;
+    if ( w <= EPS)
+        w = 0.0f;
+    return xroot + w * vtr;
 }   // end linePlaneIntersection
-
 
 
 float r3d::cosi( const Vec3f& i, const Vec3f& a, const Vec3f& b)

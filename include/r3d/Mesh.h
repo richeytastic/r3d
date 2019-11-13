@@ -182,10 +182,10 @@ public:
     size_t removeDisconnectedVertices();
 
     /**
-     * Adjust vertex vidx to be in a new position. This function operates on the raw (untransformed) vertex.
+     * Adjust raw (untransformed) vertex vidx to be in a new position.
      */
-    bool adjustVertex( int vidx, const Vec3f&);
-    bool adjustVertex( int vidx, float x, float y, float z);
+    bool adjustRawVertex( int vidx, const Vec3f&);
+    bool adjustRawVertex( int vidx, float x, float y, float z);
 
     /**
      * Multiply the component of each vertex by sfactor.
@@ -273,14 +273,20 @@ public:
 
     /**
      * Given the ordering of vertices on the face, calculate and return the unit normal.
-     * The normal calculation uses the internal transformation matrix and so the value
-     * returned from this function will be different (for the same face ID) should the
-     * transform matrix be set differently.
+     * This normal is always calculated from the UNTRANSFORMED vertices.
      */
     Vec3f calcFaceNorm( int fid) const;
 
     /**
+     * Returns the non normalised version of the face normal with direction specified
+     * by the ordering of vertices on the face. Note that the magnitude of this returned
+     * vector is twice the area of the face it was calculated from.
+     */
+    Vec3f calcFaceVector( int fid) const;
+
+    /**
      * Convenience function to calculate and return the area of the given face.
+     * This is simply calcFaceVector(fid).norm() / 2.
      */
     float calcFaceArea( int fid) const;
 
@@ -317,6 +323,14 @@ public:
      * Returns false in all other cases (and the mesh is unchanged).
      */
     bool flipFacePair( int vi, int vj);
+
+    /**
+     * Turn one face into three by creating three new faces with the given point (added as a new vertex)
+     * being the shared corner of the three faces with the sides of the face being the corresponding bases
+     * of the new face triangles. Returns the ID of the new vertex that was added. The original face
+     * is removed. This function will cause hasSequentialFaceIds() to return false.
+     */
+    int subdivideFace( int fid, const Vec3f&);
 
 
     /********************************************************************************************************************/
@@ -364,6 +378,7 @@ public:
      * Returns the ID of the edge comprised of vertex vi and vj, or -1 if no edge connecting those vertices exists.
      */
     int edgeId( int vi, int vj) const;
+    int edgeId( const Vec2i&) const;
 
     /**
      * Connect up vertices vi and vj and return the edge ID or the existing edge ID if already connected.
@@ -573,7 +588,7 @@ public:
      * The untransformed positions are adjusted and so the values in the matrix should be
      * the raw (non-transformed) vertex positions.
      */
-    bool adjustVertices( const MatX3f&);
+    bool adjustRawVertices( const MatX3f&);
 
     /**
      * Show info about this mesh for debugging purposes. Set showDetail=true to show the

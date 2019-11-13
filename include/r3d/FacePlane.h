@@ -37,21 +37,21 @@ public:
     // Returns -1 if all vertices on this face are in the "outside" half, 1 if all vertices are in the "inside" half
     // and 0 if the vertices stradle the plane (then use findPlaneVertices to find where the plane intersects the
     // edges of the triangle). If 0 is returned, then a() is the vertex that is by itself on one side of the plane
-    // (with b() and c() the other two vertices). With zero returned, if inside() returns true, then a() is
-    // the vertex that is in the "inside" half of the space that the plane divides.
+    // (with b() and c() the other two vertices). If inside() returns true, then vertex 'a' is
+    // is "inside" the half space defined by the plane normal.
     inline int inhalf() const { return _nih;}
 
+    // If true, then vertex a is inside the half space pointed into by vector n.
+    // (meaning that dot product (a-p).n is positive).
+    inline bool inside() const { return _ain;}
+
     // Returns the point on edge ab of the polygon that intersect with the plane.
-    // It is only valid to call this function if inhalf() returns zero.
-    Vec3f abIntersection() const;
+    // Only use if inhalf() returns zero.
+    inline const Vec3f& abIntersection() const { return _abx;}
 
     // Returns the point on edge ac of the polygon that intersect with the plane.
-    // It is only valid to call this function if inhalf() returns zero.
-    Vec3f acIntersection() const;
-
-    // Only valid to call if inhalf has returned zero, this says if vertex a is within
-    // the half space that the initially provided vector n pointed into.
-    inline bool inside() const { return _ain;}
+    // Only use if inhalf() returns zero.
+    inline const Vec3f& acIntersection() const { return _acx;}
 
     inline int vaid() const { return _fvidxs[_a];}
     inline int vbid() const { return _fvidxs[_b];}
@@ -69,18 +69,10 @@ private:
     const Mesh &_mesh;
     int _fid;
     const int* _fvidxs;
-    const Vec3f _p;
-    Vec3f _n;
     bool _ain;
     int _a, _b, _c;
     int _nih;
-
-    // Returns -1 if all vertices of the face are in the wrong half of the space.
-    // Returns 1 if all vertices of the face are in the right half of the space.
-    // Returns 0 if face crosses the boundary, sets a to be the index into fvidxs on the
-    // side in which only that single vertex resides, and sets the sign of n to point
-    // into the half that this vertex resides.
-    int _vertexInHalf();    // On return, a is on {0,1,2}
+    Vec3f _abx, _acx;
 };  // end class
 
 }   // end namespace

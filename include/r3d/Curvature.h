@@ -53,13 +53,13 @@ public:
     // Return the full matrix of vertex normals (untransformed vertices).
     inline const MatX3f &vertexNormals() const { return _vtxNormals;}
 
-    // Adjust the position of a single vertex on the mesh and also update its curvature
+    // Adjust the raw position of a single vertex on the mesh and also update its curvature
     // (along with the curvature of all connected vertices as well).
     // This function is provided only for making iterative adjustments to vertex positions
     // where the resulting modified curvature needs to be reparsed (e.g. for smoothing).
     // If iterative curvature changes on single vertices are not needed, it is more
     // efficient to create this object again from scratch after making mesh wide changes.
-    void adjustVertex( int vidx, const Vec3f&);
+    void adjustRawVertex( int vidx, const Vec3f&);
 
     /*****************************************************************************************/
 

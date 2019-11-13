@@ -28,7 +28,7 @@ using r3d::Vec3f;
 Slicer::Slicer( const Mesh& src) : _mesh(src)
 {
     if ( src.transformMatrix() != Mat4f::Identity())
-        std::cerr << "[WARNING] r3d::Slicer::ctor: Supplied mesh's transform is not identity!" << std::endl;
+        std::cerr << "[WARNING] r3d::Slicer::ctor: Sufplied mesh's transform is not identity!" << std::endl;
 }   // end ctor
 
 
@@ -37,23 +37,21 @@ Mesh::Ptr Slicer::operator()( const Vec3f& p, const Vec3f& vec) const
     Vec3f n = vec;    // Ensure the plane vector is normalised
     n.normalize();
 
-    const Mesh& mod = _mesh;
-    Copier copier( mod);
+    const Mesh& mesh = _mesh;
+    Copier copier( mesh);
     // The copied mesh has the source mesh's transform matrix.
-    Mesh::Ptr hmod = copier.copiedMesh();
+    Mesh::Ptr hmesh = copier.copiedMesh();
 
     // We need the inverse of the transform matrix because we must transform the discovered
     // plane vertices to their "untransformed" positions since when discovered they are transformed.
-    const Mat4f imat = hmod->transformMatrix().inverse();
+    const Mat4f& imat = hmesh->inverseTransformMatrix();
 
-    int mid;
     Vec2f uvyb, uvyc;
-    Vec3f yb, yc;
     const IntSet& fids = _mesh.faces();
     for ( int fid : fids)
     {
-        const FacePlane pp( mod, fid, p, n);
-        const int nihs = pp.inhalf();
+        const FacePlane fp( mesh, fid, p, n);
+        const int nihs = fp.inhalf();
 
         if ( nihs == -1) // All face vertices in the wrong half so ignore
             continue;
@@ -61,62 +59,123 @@ Mesh::Ptr Slicer::operator()( const Vec3f& p, const Vec3f& vec) const
             copier.add(fid);    // All face vertices in right half so copy in normally (uses the untransformed vertices)
         else
         {
-            yb = pp.abIntersection();
-            yc = pp.acIntersection();
-            transform( imat, yb);
-            transform( imat, yc);
-            const int y = hmod->addVertex( yb);
-            const int z = hmod->addVertex( yc);
+            const Vec3f& abi = fp.abIntersection();
+            const Vec3f& aci = fp.acIntersection();
 
-            mid = mod.faceMaterialId(fid);
+            // If the plane goes exactly through vertex a, then the intersection points will meet vertex a.
+            // This will always be the case since FacePlane always calculates the intersections to be points
+            // along the edges FROM vertex a.
+            // If the intersecting points meet vertex a, then depending on what side of the plane the other
+            // vertices are in, we either add, or reject the triangle. We can deduce this because FacePlane
+            // always tries to split the triangle meaning that if fp.inside() is true then the other two
+            // vertices must be in the wrong half, meaning that the whole of the triangle is outside and
+            // should be rejected. If fp.inside() is false then the other two vertices are in the correct
+            // half so the triangle is copied in. In some pathological cases, the triangle has zero area
+            // and all vertices lie on the boundary. In such cases, the triangle can be rejected.
+            static const float EPS = 1e-6f;
+            if ( (abi - aci).squaredNorm() < EPS)
+            {
+                const float farea = mesh.calcFaceArea(fid);
+                if ( !fp.inside() && farea > EPS)
+                    copier.add(fid);
+                continue;
+            }   // end if
+
+            const bool xbOnBoundary = (fp.vb() - abi).squaredNorm() < EPS;
+            const bool xcOnBoundary = (fp.vc() - aci).squaredNorm() < EPS;
+
+            // If the intersecting points are both coincident with their edge points b and c then the entirety
+            // of one edge lies along the boundary and a similar check of fp.inside() will yield if we need
+            // to keep or reject the triangle.
+            if ( xbOnBoundary && xcOnBoundary)
+            {
+                const float farea = mesh.calcFaceArea(fid);
+                if ( fp.inside() && farea > EPS)
+                    copier.add(fid);
+                continue;
+            }   // end if
+
+            const Vec3f yb = transform( imat, abi);
+            const Vec3f yc = transform( imat, aci);
+            const int y = hmesh->addVertex( yb);
+            const int z = hmesh->addVertex( yc);
+            assert( y != z);
+
+            int mid = mesh.faceMaterialId(fid);
             if ( mid >= 0)
             {
-                uvyb = mod.calcTextureCoords( fid, yb);
-                uvyc = mod.calcTextureCoords( fid, yc);
+                uvyb = mesh.calcTextureCoords( fid, yb);
+                uvyc = mesh.calcTextureCoords( fid, yc);
             }   // end if
 
-            if ( pp.inside()) // Only a single vertex is in the half space so new triangle easy
+            if ( fp.inside()) // Copy across a single triangle formed by vertex a and the intersection points
             {
-                const int x = hmod->addVertex( transform( imat, pp.va()));   // In half space
-                const int nfid = hmod->addFace( x, y, z);
+                const int x = hmesh->addVertex( transform( imat, fp.va()));   // In half space
+                assert( x != y && x != z);
+                const int nfid = hmesh->addFace( x, y, z);
                 if ( mid >= 0)
-                    hmod->setOrderedFaceUVs( mid, nfid, pp.uva(), uvyb, uvyc);
+                    hmesh->setOrderedFaceUVs( mid, nfid, fp.uva(), uvyb, uvyc);
             }   // end if
-            else    // Two vertices in the half space so need to add two new triangles
+            else    // Two vertices in the half space so add two new triangles
             {
-                const Vec3f& xb = pp.vb();   // In half space
-                const Vec3f& xc = pp.vc();   // In half space
-                const int v = hmod->addVertex( transform( imat, xb));
-                const int x = hmod->addVertex( transform( imat, xc));
+                // Note that they can't both be on the boundary since this is dealt with above
+                assert( !xbOnBoundary || !xcOnBoundary);
 
-                // What's the shortest diagonal to split the two new triangles? yb,xc or yc,xb?
-                if ( ( yb-xc).norm() < ( yc-xb).norm())
+                const int v = hmesh->addVertex( transform( imat, fp.vb()));
+                const int x = hmesh->addVertex( transform( imat, fp.vc()));
+                assert( v != x);
+
+                // If only one is on the boundary, then making the triangle is easy
+                if ( xbOnBoundary)
                 {
-                    const int nfid0 = hmod->addFace( y, v, x);
-                    const int nfid1 = hmod->addFace( x, z, y);
+                    assert( v == y);
+                    const int nfid = hmesh->addFace( x, z, y);
                     if ( mid >= 0)
-                    {
-                        const Vec2f& uvb = pp.uvb();
-                        const Vec2f& uvc = pp.uvc();
-                        hmod->setOrderedFaceUVs( mid, nfid0, uvyb, uvb, uvc);
-                        hmod->setOrderedFaceUVs( mid, nfid1, uvc, uvyc, uvyb);
-                    }   // end if
+                        hmesh->setOrderedFaceUVs( mid, nfid, fp.uvc(), uvyc, uvyb);
                 }   // end if
+                else if ( xcOnBoundary)
+                {
+                    assert( x == z);
+                    const int nfid = hmesh->addFace( y, v, x);
+                    if ( mid >= 0)
+                        hmesh->setOrderedFaceUVs( mid, nfid, uvyb, fp.uvb(), fp.uvc());
+                }   // end else if
                 else
                 {
-                    const int nfid0 = hmod->addFace( v, x, z);
-                    const int nfid1 = hmod->addFace( z, y, v);
-                    if ( mid >= 0)
+                    // Neither is on the boundary.
+                    // What's the shortest diagonal to split the two new triangles? (yb - fp.vc()) or (yc - fp.vb())?
+                    if ( ( yb - fp.vc()).squaredNorm() < ( yc - fp.vb()).squaredNorm())
                     {
-                        const Vec2f& uvb = pp.uvb();
-                        const Vec2f& uvc = pp.uvc();
-                        hmod->setOrderedFaceUVs( mid, nfid0, uvb, uvc, uvyc);
-                        hmod->setOrderedFaceUVs( mid, nfid1, uvyc, uvyb, uvb);
+                        assert( x != v);
+                        assert( x != y);
+                        assert( x != z);
+                        assert( y != v);
+                        assert( y != z);
+
+                        const int nfid0 = hmesh->addFace( y, v, x);
+                        const int nfid1 = hmesh->addFace( x, z, y);
+                        if ( mid >= 0)
+                        {
+                            hmesh->setOrderedFaceUVs( mid, nfid0,     uvyb, fp.uvb(), fp.uvc());
+                            hmesh->setOrderedFaceUVs( mid, nfid1, fp.uvc(),     uvyc,     uvyb);
+                        }   // end if
                     }   // end if
+                    else
+                    {
+                        assert( x != z && z != v && x != v);
+                        assert( v != y && y != z && v != z);
+                        const int nfid0 = hmesh->addFace( v, x, z);
+                        const int nfid1 = hmesh->addFace( z, y, v);
+                        if ( mid >= 0)
+                        {
+                            hmesh->setOrderedFaceUVs( mid, nfid0, fp.uvb(), fp.uvc(),     uvyc);
+                            hmesh->setOrderedFaceUVs( mid, nfid1,     uvyc,     uvyb, fp.uvb());
+                        }   // end if
+                    }   // end else
                 }   // end else
             }   // end else
         }   // end else
     }   // end for
 
-    return hmod;
+    return hmesh;
 }   // end operator()
