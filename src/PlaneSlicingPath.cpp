@@ -26,6 +26,7 @@ using r3d::Vec3f;
 PlaneSlicingPath::PlaneSlicingPath( const Mesh& m, int ifid, const Vec3f& ip)
     : _mesh(m), _ip(ip), _ifid(ifid)
 {
+    assert( !ip.array().isNaN().any());
     reset();
 }   // end ctor
 
@@ -58,6 +59,7 @@ void PlaneSlicingPath::init( int notThisFid)
     if ( nfidab >= 0 && nfidab != notThisFid)
     {
         nfid = nfidab;
+        assert( !pp.abIntersection().array().isNaN().any());
         _evtxs.push_back( pp.abIntersection());
     }   // end if
 
@@ -65,6 +67,7 @@ void PlaneSlicingPath::init( int notThisFid)
     if ( nfid < 0 && nfidac >= 0 && nfidac != notThisFid)
     {
         nfid = nfidac;
+        assert( !pp.acIntersection().array().isNaN().any());
         _evtxs.push_back( pp.acIntersection());
     }   // end else
 
@@ -72,8 +75,10 @@ void PlaneSlicingPath::init( int notThisFid)
 }   // end init
 
 
-int PlaneSlicingPath::nextFace() const { return _nfid;}
-bool PlaneSlicingPath::canSplice( const PlaneSlicingPath& psp) const { return _nfid >= 0 && psp.nextFace() == _nfid;}
+bool PlaneSlicingPath::canSplice( const PlaneSlicingPath& psp) const
+{
+    return (canExtend() && psp.nextFace() == _nfid) || (psp.lastVertexAdded() - lastVertexAdded()).squaredNorm() < 1e-4f;
+}   // end canSplice
 
 
 void PlaneSlicingPath::_pushOnInitialToBack( std::vector<Vec3f>& path) const
@@ -89,7 +94,11 @@ void PlaneSlicingPath::_pushOnBackToInitial( std::vector<Vec3f>& path) const
 {
     int iidx = static_cast<int>(_evtxs.size()) - 1;
     while ( iidx >= 0)
-        path.push_back( _evtxs[iidx--]);
+    {
+        const Vec3f &v = _evtxs[iidx--];
+        if ( path.back() != v)  // No duplicate
+            path.push_back( v);
+    }   // end if
 }   // _pushOnBackToInitial
 
 
@@ -104,31 +113,33 @@ void PlaneSlicingPath::splice( const PlaneSlicingPath& psp, std::vector<Vec3f>& 
 }   // end splice
 
 
-bool PlaneSlicingPath::canExtend() const { return _nfid >= 0;}
-
-
 int PlaneSlicingPath::_findNextFaceEdgeVertex( int fid, const Vec3f& v, Vec3f& ev)
 {
     _pfids.insert(fid);     // Record that we've parsed this face
     const Vec3f u = faceSlicingPlane( fid, v);
     _lastParsedFace = fid;
+    assert( !u.isZero());
 
     const FacePlane pp( _mesh, fid, v, u);
-    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    // inhalf must return 0 because v is inside the bounds of face fid.
-    // Even if v is at one vertex, it must still logically cross at that point.
-    assert( pp.inhalf() == 0);
-    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    // if inhalf is not zero, then the calculated plane slicing norm does
+    // not cut through the face and we're done.
+    if ( pp.inhalf() != 0)
+        return -1;
+
     int nfid = -1;
     // If vertex v is EXACTLY incident with a vertex on this face, then pp.straddleId()
     // will return the straddling vertex ID and in this case the opposite face is the one
     // adjacent to the edge opposite the straddling vertex.
     if ( pp.straddleId() >= 0)
     {
+        //std::cerr << "  - Got straddle vertex " << pp.straddleId() << std::endl;
         assert( pp.vaid() != pp.straddleId());
-        int ovid0, ovid1;
-        _mesh.face(fid).opposite( pp.straddleId(), ovid0, ovid1);
-        nfid = _mesh.oppositeFace( fid, ovid0, ovid1);
+        nfid = _mesh.oppositeFace( fid, pp.vaid(), pp.straddleId());
+        if ( pp.straddleId() == pp.vbid())
+            ev = pp.abIntersection();
+        else
+            ev = pp.acIntersection();
     }   // end if
     else
     {
@@ -158,7 +169,10 @@ bool PlaneSlicingPath::extend()
         if ( _nfid == _ifid)
             _nfid = -1;
         else
+        {
+            assert( !ev.array().isNaN().any());
             _evtxs.push_back( ev);
+        }   // end else
     }   // end if
 
     return _nfid >= 0;

@@ -38,14 +38,14 @@ public:
 
     inline int initFace() const { return _ifid;}
     inline int firstFace() const { return _ffid;}
-    int nextFace() const;
+    inline int nextFace() const { return _nfid;}
 
     bool canSplice( const PlaneSlicingPath&) const;
 
     void splice( const PlaneSlicingPath&, std::vector<Vec3f>&) const;
 
     // Returns true iff this path can be extended at one or both of its ends.
-    bool canExtend() const;
+    inline bool canExtend() const { return _nfid >= 0;}
 
     // Returns true if can keep extending the front or back of the path.
     bool extend();

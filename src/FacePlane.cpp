@@ -40,6 +40,7 @@ int setSide( float dp)
 {
     int s = 0;
     if ( std::fpclassify(dp) != FP_ZERO)
+    //if ( fabsf(dp) > 1e-5f)
         s = int(std::copysignf( 1.0f, dp));
     return s;
 }   // end setSide
@@ -51,6 +52,9 @@ FacePlane::FacePlane( const Mesh& src, int fid, const Vec3f& p, const Vec3f& n)
     : _mesh(src), _fid(fid), _fvidxs( _mesh.fvidxs(fid)),
       _ain(false), _straddleId(-1), _a(0), _b(1), _c(2), _nih(0)
 {
+    assert( !p.array().isNaN().any());
+    assert( !n.array().isNaN().any());
+
     const Vec3f &x0 = _mesh.vtx(_fvidxs[0]);
     const Vec3f &x1 = _mesh.vtx(_fvidxs[1]);
     const Vec3f &x2 = _mesh.vtx(_fvidxs[2]);
@@ -80,6 +84,7 @@ FacePlane::FacePlane( const Mesh& src, int fid, const Vec3f& p, const Vec3f& n)
             // all of the vertices being superimposed upon one another (which is disallowed by
             // virtue of the Mesh class checking a hash of vertex positions).
             assert( s[1] != 0 || s[2] != 0);
+
             if ( s[1] == 0)
                 _a = 2;
             else if ( s[2] == 0)
