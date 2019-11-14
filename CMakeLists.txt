@@ -39,6 +39,7 @@ set( INCLUDE_FILES
     "${INCLUDE_F}/HoleFiller.h"
     "${INCLUDE_F}/Image.h"
     "${INCLUDE_F}/Internal.h"
+    "${INCLUDE_F}/IterativeSurfacePathFinder.h"
     "${INCLUDE_F}/KDTree.h"
     "${INCLUDE_F}/LocalPlaneSlicingPath.h"
     "${INCLUDE_F}/Manifolds.h"
@@ -88,6 +89,7 @@ set( SRC_FILES
     ${SRC_DIR}/HoleFiller
     ${SRC_DIR}/Image
     ${SRC_DIR}/Internal
+    ${SRC_DIR}/IterativeSurfacePathFinder
     ${SRC_DIR}/KDTree
     ${SRC_DIR}/LocalPlaneSlicingPath
     ${SRC_DIR}/Manifolds

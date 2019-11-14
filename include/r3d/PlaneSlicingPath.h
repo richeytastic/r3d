@@ -36,8 +36,8 @@ public:
     // by specifying the face that SHOULDN'T be next.
     void init( int notMeFaceId=-1);
 
-    int initFace() const { return _ifid;}
-    int firstFace() const { return _ffid;}
+    inline int initFace() const { return _ifid;}
+    inline int firstFace() const { return _ffid;}
     int nextFace() const;
 
     bool canSplice( const PlaneSlicingPath&) const;
@@ -51,11 +51,13 @@ public:
     bool extend();
 
 protected:
-    virtual Vec3f faceSlicingPlane( int fid, const Vec3f&) const = 0;
+    virtual Vec3f faceSlicingPlane( int thisFid, const Vec3f&) const = 0;
 
     inline const Mesh& mesh() const { return _mesh;}
 
     inline const Vec3f& lastVertexAdded() const { return _evtxs.back();}
+
+    inline const int lastParsedFace() const { return _lastParsedFace;}
 
 private:
     const Mesh &_mesh;
@@ -64,6 +66,7 @@ private:
     int _ffid;          // The first face after the initial (might be -1)
     int _nfid;          // Next face id
     IntSet _pfids;
+    int _lastParsedFace;
     std::deque<Vec3f> _evtxs;    // Edge crossing vertices
 
     void _pushOnInitialToBack( std::vector<Vec3f>& path) const;

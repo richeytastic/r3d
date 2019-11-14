@@ -94,24 +94,35 @@ void r3d::findInitialVertices( const KDTree& kdt, Vec3f &p0, int &f0, Vec3f &p1,
 
 float r3d::findPathOption( PlaneSlicingPath& sp0, int nfid0, PlaneSlicingPath& sp1, int nfid1, std::vector<Vec3f>& path)
 {
+#ifndef NDEBUG
+    std::cerr << "sp0 rejects face " << nfid0 << std::endl;
+    std::cerr << "sp1 rejects face " << nfid1 << std::endl;
+#endif
+
     sp0.init( nfid0);
     if ( !sp0.canSplice( sp1))
         sp1.init( nfid1);
 
-    //int ex0count = 0; // DEBUG
-    //int ex1count = 0; // DEBUG
+#ifndef NDEBUG
+    int ex0count = 0; // DEBUG
+    int ex1count = 0; // DEBUG
+#endif
     while ( !sp0.canSplice(sp1) && sp0.canExtend() && sp1.canExtend())
     {
-        //ex0count++;   // DEBUG
+#ifndef NDEBUG
+        ex0count++;   // DEBUG
+#endif
         sp0.extend();
         if ( !sp0.canSplice(sp1))
         {
-            //ex1count++;   // DEBUG
+#ifndef NDEBUG
+            ex1count++;   // DEBUG
+#endif
             sp1.extend();
         }   // end if
     }   // end while
 
-    /*
+#ifndef NDEBUG
     std::cerr << " ------------- " << std::endl;
     std::cerr << "Extended sp0 " << ex0count << " times" << std::endl;
     std::cerr << "sp0.initFace() = " << sp0.initFace() << std::endl;
@@ -122,7 +133,7 @@ float r3d::findPathOption( PlaneSlicingPath& sp0, int nfid0, PlaneSlicingPath& s
     std::cerr << "sp1.initFace() = " << sp1.initFace() << std::endl;
     std::cerr << "sp1.firstFace() = " << sp1.firstFace() << std::endl;
     std::cerr << "sp1.nextFace() = " << sp1.nextFace() << std::endl;
-    */
+#endif
 
     float psum = 0;
     // Joined up path found?
@@ -131,12 +142,12 @@ float r3d::findPathOption( PlaneSlicingPath& sp0, int nfid0, PlaneSlicingPath& s
         sp0.splice( sp1, path);
         psum = SurfacePathFinder::calcPathLength( path);
 
-        /*
+#ifndef NDEBUG
         std::cerr << "Spliced path:" << std::endl;
         for ( const Vec3f& v : path)
             std::cerr << "  " << v << std::endl;
         std::cerr << "  Path sum = " << psum << std::endl;
-        */
+#endif
     }   // end if
 
     return psum;
@@ -148,8 +159,10 @@ std::vector<Vec3f> r3d::findBestPath( PlaneSlicingPath& sp0, PlaneSlicingPath& s
     // There are four possible paths to take from the two endpoints.
     std::vector<Vec3f> path0, path1;
 
-    //std::cerr << "\n\nFIND_BEST_PATH SET: " << std::endl;
-    //std::cerr << "\n * findPathOption 0 *" << std::endl;
+#ifndef NDEBUG
+    std::cerr << "\n\nFIND_BEST_PATH SET: " << std::endl;
+    std::cerr << "\n**** findPathOption 0 ****" << std::endl;
+#endif
 
     sp0.reset();
     sp1.reset();
@@ -157,15 +170,19 @@ std::vector<Vec3f> r3d::findBestPath( PlaneSlicingPath& sp0, PlaneSlicingPath& s
     const int sp0Afid = sp0.firstFace();    // First face that path took from v0 (direction from f0)
     const int sp1Afid = sp1.firstFace();    // First face that path took from v1 (direction from f1)
 
-    //std::cerr << "\n * findPathOption 1 *" << std::endl;
+#ifndef NDEBUG
+    std::cerr << "\n**** findPathOption 1 ****" << std::endl;
+#endif
 
     sp0.reset();
     sp1.reset();
-    float psum1 = findPathOption( sp0, sp0Afid, sp1, sp1Afid, path1);  // Choose a different direction to go in for the endpoint
+    float psum1 = findPathOption( sp0, sp0Afid, sp1, sp1Afid, path1);  // Choose different direction to go in for endpoint
     const int sp0Bfid = sp0.firstFace();    // Second face direction that path took from v0 (direction from f0)
     const int sp1Bfid = sp1.firstFace();    // Second face direction that path took from v1 (direction from f1)
 
-    //std::cerr << "\n * findPathOption 2 *" << std::endl;
+#ifndef NDEBUG
+    std::cerr << "\n**** findPathOption 2 ****" << std::endl;
+#endif
 
     sp0.reset();
     sp1.reset();
@@ -174,7 +191,9 @@ std::vector<Vec3f> r3d::findBestPath( PlaneSlicingPath& sp0, PlaneSlicingPath& s
     else if ( psum1 == 0)
         psum1 = findPathOption( sp0, sp0Bfid, sp1, sp1Afid, path1);
     
-    //std::cerr << "\n * findPathOption 3 *" << std::endl;
+#ifndef NDEBUG
+    std::cerr << "\n**** findPathOption 3 ****" << std::endl;
+#endif
 
     sp0.reset();
     sp1.reset();

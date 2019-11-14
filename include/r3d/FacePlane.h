@@ -45,6 +45,11 @@ public:
     // (meaning that dot product (a-p).n is positive).
     inline bool inside() const { return _ain;}
 
+    // If non-negative, then the returned vertex ID passes EXACTLY through the half space
+    // boundary AND the other two vertices of the triangle are on either side of the boundary.
+    // Note that this will never be vaid() since the design of Mesh disallows zero area faces.
+    inline int straddleId() const { return _straddleId;}
+
     // Returns the point on edge ab of the polygon that intersect with the plane.
     // Only use if inhalf() returns zero.
     inline const Vec3f& abIntersection() const { return _abx;}
@@ -70,6 +75,7 @@ private:
     int _fid;
     const int* _fvidxs;
     bool _ain;
+    int _straddleId;
     int _a, _b, _c;
     int _nih;
     Vec3f _abx, _acx;

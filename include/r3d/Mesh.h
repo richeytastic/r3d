@@ -227,9 +227,11 @@ public:
     inline bool hasSequentialFaceIds() const { return numFaces() == _fCounter;}
 
     /**
-     * Make a face from already added vertices. Returns ID of created face (or ID of face already created
-     * with those vertices) or -1 if face could not be created because referenced vertices don't yet exist.
-     * The order of vertices on a face matters since this defines its normal vector.
+     * Make a face from already added vertices. Returns the ID of the newly created face (or the ID of face
+     * already created with those vertices). Returns -1 if the face could not be created either because the
+     * referenced vertices don't yet exist, two or more of the vertex IDs are the same, or because the proposed
+     * edges of the face are not linearly independent (the area of a face must be strictly positive).
+     * The specified order of vertex IDs on a face matters since this defines its normal vector.
      */
     int addFace( const int* vidxs);
     int addFace( int v0, int v1, int v2);
@@ -272,17 +274,18 @@ public:
     void reverseFaceVertices( int id);
 
     /**
-     * Given the ordering of vertices on the face, calculate and return the unit normal.
-     * This normal is always calculated from the UNTRANSFORMED vertices.
+     * Given the ordering of vertices on the face, calculate and return the face's unit normal.
+     * The normal is calculated from the UNTRANSFORMED vertices unless useTransformed is true.
      */
-    Vec3f calcFaceNorm( int fid) const;
+    Vec3f calcFaceNorm( int fid, bool useTransformed=false) const;
 
     /**
      * Returns the non normalised version of the face normal with direction specified
      * by the ordering of vertices on the face. Note that the magnitude of this returned
-     * vector is twice the area of the face it was calculated from.
+     * vector is twice the area of the face it was calculated from. The UNTRANSFORMED
+     * vertices are used to calculate this vector unless useTransformed is true.
      */
-    Vec3f calcFaceVector( int fid) const;
+    Vec3f calcFaceVector( int fid, bool useTransformed=false) const;
 
     /**
      * Convenience function to calculate and return the area of the given face.
@@ -362,6 +365,11 @@ public:
      * Return the specified edge.
      */
     inline const Edge& edge( int edgeId) const { return _edges.at(edgeId);}
+
+    /**
+     * Given two face IDs, return their common edge or null if no edge is shared by the given faces.
+     */
+    const Edge *commonEdge( int fid0, int fid1) const;
 
     /**
      * Return the IDs of all edges with the given vertex in common.

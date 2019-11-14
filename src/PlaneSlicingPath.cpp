@@ -34,10 +34,11 @@ void PlaneSlicingPath::reset()
 {
     _ffid = -1;
     _nfid = _ifid;
-    _pfids.clear();
     _evtxs.clear();
     _evtxs.push_back(_ip);
+    _pfids.clear();
     _pfids.insert(_ifid);
+    _lastParsedFace = _ifid;
 }   // end reset
 
 
@@ -108,18 +109,37 @@ bool PlaneSlicingPath::canExtend() const { return _nfid >= 0;}
 
 int PlaneSlicingPath::_findNextFaceEdgeVertex( int fid, const Vec3f& v, Vec3f& ev)
 {
-    _pfids.insert(fid); // Record that we've parsed this face
-    const FacePlane pp( _mesh, fid, v, faceSlicingPlane(fid, v));
-    // inhalf must return 0 because p is inside the bounds of face fid.
-    // Even if p is at one vertex, it must still logically cross at that point.
+    _pfids.insert(fid);     // Record that we've parsed this face
+    const Vec3f u = faceSlicingPlane( fid, v);
+    _lastParsedFace = fid;
+
+    const FacePlane pp( _mesh, fid, v, u);
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // inhalf must return 0 because v is inside the bounds of face fid.
+    // Even if v is at one vertex, it must still logically cross at that point.
     assert( pp.inhalf() == 0);
-    int nfid = _mesh.oppositeFace( fid, pp.vaid(), pp.vbid());
-    if ( _pfids.count(nfid) == 0)
-        ev = pp.abIntersection();
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    int nfid = -1;
+    // If vertex v is EXACTLY incident with a vertex on this face, then pp.straddleId()
+    // will return the straddling vertex ID and in this case the opposite face is the one
+    // adjacent to the edge opposite the straddling vertex.
+    if ( pp.straddleId() >= 0)
+    {
+        assert( pp.vaid() != pp.straddleId());
+        int ovid0, ovid1;
+        _mesh.face(fid).opposite( pp.straddleId(), ovid0, ovid1);
+        nfid = _mesh.oppositeFace( fid, ovid0, ovid1);
+    }   // end if
     else
     {
-        nfid = _mesh.oppositeFace( fid, pp.vaid(), pp.vcid());
-        ev = pp.acIntersection();
+        nfid = _mesh.oppositeFace( fid, pp.vaid(), pp.vbid());
+        if ( _pfids.count(nfid) == 0)
+            ev = pp.abIntersection();
+        else
+        {
+            nfid = _mesh.oppositeFace( fid, pp.vaid(), pp.vcid());
+            ev = pp.acIntersection();
+        }   // end else
     }   // end else
     // If we've already parsed nfid, then return -1, otherwise return nfid (which could still be -1 if an edge was reached)
     return _pfids.count(nfid) > 0 ? -1 : nfid;

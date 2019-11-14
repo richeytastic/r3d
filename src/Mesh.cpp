@@ -366,10 +366,14 @@ int Mesh::addVertex( const Vec3f &V)
         return -1;
     }   // end if
 
+    Vec3f v = V;
     if ( !hasFixedTransform())
+    {
+        v = transform( _imat, V);
+#ifndef NDEBUG
         std::cerr << "[WARNING] r3d::Mesh::addVertex: transform is not Identity!" << std::endl;
-
-    const Vec3f v = transform( _imat, V);
+#endif
+    }   // end if
 
     size_t key = hash( v, HASH_NDP);
     if ( _v2id.count( key) > 0)
@@ -622,13 +626,31 @@ int Mesh::addFace( const int *vtxs) { return addFace( vtxs[0], vtxs[1], vtxs[2])
 
 int Mesh::addFace( int v0, int v1, int v2)
 {
-    assert( _vids.count(v0) > 0);
-    assert( _vids.count(v1) > 0);
-    assert( _vids.count(v2) > 0);
+    // Check that the vertices are present
+    if ( _vids.count(v0) == 0 || _vids.count(v1) == 0 || _vids.count(v2) == 0)
+    {
+        assert(false);
+        return -1;
+    }   // end if
 
-    const Face fc( v0, v1, v2); // Don't add if already present
+    // Check that the vertices are all different
+    if ( v0 == v1 || v1 == v2 || v0 == v2)
+    {
+        assert(false);
+        return -1;
+    }   // end if
+
+    // Return the existing face id if already present
+    const Face fc( v0, v1, v2);
     if ( _f2id.count(fc) > 0)
         return _f2id.at(fc);
+
+    // Check for linear independence of the proposed edges.
+    const Vec3f &a = _vtxs.at(v0);
+    const Vec3f &b = _vtxs.at(v1);
+    const Vec3f &c = _vtxs.at(v2);
+    if ( fabsf( (a-b).dot(c-b)) == 1)
+        return -1;
 
     const int fid = (int)_fCounter++;
     _faces[fid] = fc;
@@ -804,22 +826,32 @@ void Mesh::reverseFaceVertices( int fid)
 }   // end reverseFaceVertices
 
 
-Vec3f Mesh::calcFaceNorm( int fid) const
+Vec3f Mesh::calcFaceNorm( int fid, bool useTransformed) const
 {
-    Vec3f nrm = calcFaceVector( fid);
+    Vec3f nrm = calcFaceVector( fid, useTransformed);
     nrm.normalize();
     return nrm;
 }   // end calcFaceNorm
 
 
-Vec3f Mesh::calcFaceVector( int fid) const
+Vec3f Mesh::calcFaceVector( int fid, bool useTransformed) const
 {
     assert( faces().count(fid) > 0);
     const int *vids = fvidxs(fid);
-    const Vec3f &vA = uvtx(vids[0]);
-    const Vec3f &vB = uvtx(vids[1]);
-    const Vec3f &vC = uvtx(vids[2]);
-    return (vB - vA).cross( vC - vB);
+    const Vec3f *vA, *vB, *vC;
+    if ( useTransformed)
+    {
+        vA = &vtx(vids[0]);
+        vB = &vtx(vids[1]);
+        vC = &vtx(vids[2]);
+    }   // end if
+    else
+    {
+        vA = &uvtx(vids[0]);
+        vB = &uvtx(vids[1]);
+        vC = &uvtx(vids[2]);
+    }   // end else
+    return (*vB - *vA).cross( *vC - *vB);
 }   // end calcFaceVector
 
 
@@ -1009,6 +1041,19 @@ bool Mesh::edge( int ei, int &v0, int &v1) const
     v1 = e[1];
     return true;
 }   // end edge
+
+
+const Edge *Mesh::commonEdge( int fid0, int fid1) const
+{
+    const int *fvids = fvidxs(fid0);
+    if ( sfaces( fvids[0], fvids[1]).count(fid1) > 0)
+        return &edge( edgeId( fvids[0], fvids[1]));
+    if ( sfaces( fvids[1], fvids[2]).count(fid1) > 0)
+        return &edge( edgeId( fvids[1], fvids[2]));
+    if ( sfaces( fvids[2], fvids[0]).count(fid1) > 0)
+        return &edge( edgeId( fvids[2], fvids[0]));
+    return nullptr;
+}   // end commonEdge
 
 
 const IntSet &Mesh::sfaces( int vi, int vj) const
@@ -1265,7 +1310,8 @@ bool Mesh::isVertexInsideFace( int fid, const Vec3f &P) const
     const float areaPBC = calcTwiceArea( P,B,C);
     const float areaPCA = calcTwiceArea( P,C,A);
 
-    return fabsf(areaPAB + areaPBC + areaPCA - areaABC) < 1e-4f;
+    // This only works if P is in the plane of fid.
+    return fabsf(areaPAB + areaPBC + areaPCA - areaABC) <= 1e-4f;
 }   // end isVertexInsideFace
 
 
