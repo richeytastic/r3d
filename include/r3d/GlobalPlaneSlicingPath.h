@@ -33,7 +33,7 @@ public:
     }   // end ctor
 
 protected:
-    inline Vec3f faceSlicingPlane( int, const Vec3f&) const override { return _u;}
+    inline Vec3f faceSlicingPlane( int) const override { return _u;}
 
 private:
     const Vec3f _u;

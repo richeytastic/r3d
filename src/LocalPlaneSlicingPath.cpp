@@ -20,16 +20,12 @@ using r3d::LocalPlaneSlicingPath;
 using r3d::Vec3f;
 
 
-Vec3f LocalPlaneSlicingPath::faceSlicingPlane( int tfid, const Vec3f& v) const
+Vec3f LocalPlaneSlicingPath::faceSlicingPlane( int tfid) const
 {
-    assert( !v.array().isNaN().any());
+    const auto &exings = edgeCrossings();
     assert(_endPath);
-    const Vec3f& q = _endPath->lastVertexAdded();
-    assert( !q.array().isNaN().any());
-
-    Vec3f v2q = q - v;
-    assert( !v2q.isZero());
-
+    const Vec3f &q = _endPath->edgeCrossings().back();
+    Vec3f v2q = q - exings.back();
     v2q.normalize();    // There might seem like there are more normalisations going on here than necessary,
     // and indeed - in theory - there are. However, I noticed that I get better accuracy normalising a vector
     // before involving it in a cross product with another normal vector, so that's the reason for all the
@@ -45,7 +41,9 @@ Vec3f LocalPlaneSlicingPath::faceSlicingPlane( int tfid, const Vec3f& v) const
     zvec.normalize();
     Vec3f xvec = v2q.cross( zvec);
     xvec.normalize();
-    if ( lastParsedFace() != tfid)
+
+    // The last local path step must be towards q or the calculations below won't work!
+    if ( exings.size() > 1 && (exings.back() - exings[exings.size() - 2]).dot(v2q) > 0)
     {
         // Get the vector to the current endpoint from v.
         // After rotating it into the plane of face tfid, its direction MUST cause it to cut
@@ -68,7 +66,7 @@ Vec3f LocalPlaneSlicingPath::faceSlicingPlane( int tfid, const Vec3f& v) const
         T.col(0) << rvec, 0;
         T.col(1) << yvec, 0;
         T.col(2) << zvec, 0;
-        T.col(3) << v, 1;
+        T.col(3) << exings.back(), 1;
         const Mat4f invT = T.inverse();
 
         // Transform the non edge vertex of the face into standard position ...
@@ -77,11 +75,11 @@ Vec3f LocalPlaneSlicingPath::faceSlicingPlane( int tfid, const Vec3f& v) const
         // ... and the current endpoint given by the last vertex added by the paired slicing path
         const Vec3f tq = transform( invT, q);
 
-        /*
+#ifndef NDEBUG
         std::cerr << "LocalPlaneSlicingPath::faceSlicingPlane: " << std::hex << this << std::dec << std::endl;
         std::cerr << "    Face: " << tfid << " with entered edge vertices "
                   << edge->at(1) << " and " << edge->at(0) << " (opposite " << oppVtxId << ")" << std::endl;
-        */
+#endif
         // Now easily check if the path to the endpoint crosses the face by seeing if the sign bit
         // for the x coordinate of this vector matches with the non edge vertex of the transformed
         // face. If so, we can safely use v2q as the direction vector for calculating the slicing
@@ -90,11 +88,15 @@ Vec3f LocalPlaneSlicingPath::faceSlicingPlane( int tfid, const Vec3f& v) const
         if ( std::signbit(tq[0]) != std::signbit(fvtx[0]) || std::fpclassify(tq[0]) == FP_ZERO)
         {
             xvec = rvec;
-            //std::cerr << "    EDGE defined slicing plane normal of ";
+#ifndef NDEBUG
+            std::cerr << "    EDGE defined slicing plane normal of ";
+#endif
         }   // end if
-        //else
-        //    std::cerr << "    PATH defined slicing plane normal of ";
-        //std::cerr << xvec.transpose() << std::endl;
+#ifndef NDEBUG
+        else
+            std::cerr << "    PATH defined slicing plane normal of ";
+        std::cerr << xvec.transpose() << std::endl;
+#endif
     }   // end if
 
     assert( !xvec.isZero());

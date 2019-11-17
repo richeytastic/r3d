@@ -39,8 +39,7 @@ float calcw( const Vec3f &n, const Vec3f &ac, float dp)
 int setSide( float dp)
 {
     int s = 0;
-    if ( std::fpclassify(dp) != FP_ZERO)
-    //if ( fabsf(dp) > 1e-5f)
+    if ( fabsf(dp) > 1e-6f) // DON'T MAKE ANY SMALLER THAN THIS!
         s = int(std::copysignf( 1.0f, dp));
     return s;
 }   // end setSide

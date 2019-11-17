@@ -49,7 +49,7 @@ void PlaneSlicingPath::init( int notThisFid)
 
     // Derived class implementation defines the calculation to find the plane that
     // crosses at right angles to the path direction and goes through triangle _ifid.
-    const Vec3f u = faceSlicingPlane( _ifid, _ip);
+    const Vec3f u = faceSlicingPlane( _ifid);
     const FacePlane pp( _mesh, _ifid, _ip, u);
     assert( pp.inhalf() == 0);
 
@@ -60,7 +60,8 @@ void PlaneSlicingPath::init( int notThisFid)
     {
         nfid = nfidab;
         assert( !pp.abIntersection().array().isNaN().any());
-        _evtxs.push_back( pp.abIntersection());
+        if ( pp.abIntersection() != _evtxs.back())
+            _evtxs.push_back( pp.abIntersection());
     }   // end if
 
     const int nfidac = _mesh.oppositeFace( _ifid, pp.vaid(), pp.vcid());
@@ -68,7 +69,8 @@ void PlaneSlicingPath::init( int notThisFid)
     {
         nfid = nfidac;
         assert( !pp.acIntersection().array().isNaN().any());
-        _evtxs.push_back( pp.acIntersection());
+        if ( pp.acIntersection() != _evtxs.back())
+            _evtxs.push_back( pp.acIntersection());
     }   // end else
 
     _nfid = _ffid = nfid;
@@ -77,7 +79,7 @@ void PlaneSlicingPath::init( int notThisFid)
 
 bool PlaneSlicingPath::canSplice( const PlaneSlicingPath& psp) const
 {
-    return (canExtend() && psp.nextFace() == _nfid) || (psp.lastVertexAdded() - lastVertexAdded()).squaredNorm() < 1e-4f;
+    return (canExtend() && psp.nextFace() == _nfid) || (psp.edgeCrossings().back() - edgeCrossings().back()).squaredNorm() < 1e-4f;
 }   // end canSplice
 
 
@@ -94,11 +96,7 @@ void PlaneSlicingPath::_pushOnBackToInitial( std::vector<Vec3f>& path) const
 {
     int iidx = static_cast<int>(_evtxs.size()) - 1;
     while ( iidx >= 0)
-    {
-        const Vec3f &v = _evtxs[iidx--];
-        if ( path.back() != v)  // No duplicate
-            path.push_back( v);
-    }   // end if
+        path.push_back( _evtxs[iidx--]);
 }   // _pushOnBackToInitial
 
 
@@ -113,11 +111,13 @@ void PlaneSlicingPath::splice( const PlaneSlicingPath& psp, std::vector<Vec3f>& 
 }   // end splice
 
 
-int PlaneSlicingPath::_findNextFaceEdgeVertex( int fid, const Vec3f& v, Vec3f& ev)
+int PlaneSlicingPath::_findNextFaceEdgeVertex( Vec3f& ev)
 {
+    int fid = _nfid;
+
+    const Vec3f &v = _evtxs.back();
     _pfids.insert(fid);     // Record that we've parsed this face
-    const Vec3f u = faceSlicingPlane( fid, v);
-    _lastParsedFace = fid;
+    const Vec3f u = faceSlicingPlane( fid);
     assert( !u.isZero());
 
     const FacePlane pp( _mesh, fid, v, u);
@@ -127,33 +127,86 @@ int PlaneSlicingPath::_findNextFaceEdgeVertex( int fid, const Vec3f& v, Vec3f& e
     if ( pp.inhalf() != 0)
         return -1;
 
-    int nfid = -1;
     // If vertex v is EXACTLY incident with a vertex on this face, then pp.straddleId()
-    // will return the straddling vertex ID and in this case the opposite face is the one
-    // adjacent to the edge opposite the straddling vertex.
+    // will return the straddling vertex ID. In this case, it is necessary to check which
+    // direction the path entered the straddling vertex and choose the next face based on this.
     if ( pp.straddleId() >= 0)
     {
-        //std::cerr << "  - Got straddle vertex " << pp.straddleId() << std::endl;
+#ifndef NDEBUG
+        std::cerr << "  - Got straddle vertex " << pp.straddleId() << std::endl;
+#endif
         assert( pp.vaid() != pp.straddleId());
-        nfid = _mesh.oppositeFace( fid, pp.vaid(), pp.straddleId());
-        if ( pp.straddleId() == pp.vbid())
-            ev = pp.abIntersection();
+        // If the last face parsed is adjacent to the straddle vertex, then the next
+        // face should be the one opposite the straddle vertex since the path entered
+        // via the straddle vertex.
+        const int adjFace0 = _mesh.oppositeFace( fid, pp.straddleId(), pp.vaid());
+        const int notStraddleAndNotVaidVtx = _mesh.face(fid).opposite( pp.straddleId(), pp.vaid());
+        const int adjFace1 = _mesh.oppositeFace( fid, pp.straddleId(), notStraddleAndNotVaidVtx);
+        if ( _lastParsedFace == adjFace0 || _lastParsedFace == adjFace1)
+        {
+#ifndef NDEBUG
+        std::cerr << "  -  Path entered via straddle vertex" << std::endl;
+#endif
+        assert( pp.vaid() != pp.straddleId());
+            fid = _mesh.oppositeFace( fid, pp.vaid(), notStraddleAndNotVaidVtx);
+            // Get the intersection point on the edge opposite to the straddle vertex
+            if ( notStraddleAndNotVaidVtx == pp.vbid())
+                ev = pp.abIntersection();
+            else
+                ev = pp.acIntersection();
+        }   // end if
         else
-            ev = pp.acIntersection();
+        {
+#ifndef NDEBUG
+        std::cerr << "  -  Path entered via opposite edge" << std::endl;
+#endif
+            // Otherwise, the path entered through the edge opposite
+            // to the straddle vertex and so the next face can be either of the
+            // two faces adjacent to the straddle vertex and this face.
+            fid = _mesh.oppositeFace( fid, pp.straddleId(), pp.vaid());
+            // And the next vertex on the path is the position of the straddle vertex.
+            ev = _mesh.vtx( pp.straddleId());
+        }   // end else
     }   // end if
     else
     {
-        nfid = _mesh.oppositeFace( fid, pp.vaid(), pp.vbid());
-        if ( _pfids.count(nfid) == 0)
-            ev = pp.abIntersection();
+        // Get the two possible next faces
+        const int nfidAB = _mesh.oppositeFace( fid, pp.vaid(), pp.vbid());
+        const int nfidAC = _mesh.oppositeFace( fid, pp.vaid(), pp.vcid());
+
+        // If one of these is already a parsed face, then the choice is easy:
+        // it is only a parsed face because the path came into this face from
+        // that edge. However, it is possible that neither face is in the
+        // parsed set; this can happen if the edge is "bounced" from entering
+        // the current face and the path is given cause to run along the
+        // edge through the edge vertices. In this case we need to select
+        // the next face based on its local direction from the start vertex.
+        bool useAC = false;
+        if ( _pfids.count(nfidAB) > 0)
+            useAC = true;
+        else if ( _pfids.count(nfidAC) == 0)
+        {
+            // Select based on the last step vector being congruent in direction
+            // with the chosen vertex (or coincidental with it).
+            const Vec3f lstep = v - _evtxs[_evtxs.size()-2];
+            assert( !lstep.isZero());   // Last step vector can't be zero
+            useAC  = (_mesh.vtx(pp.vcid()) - v).dot(lstep) >= 0;
+        }   // end else
+
+        if ( useAC)
+        {
+            ev = pp.acIntersection();
+            fid = nfidAC;
+        }   // end if
         else
         {
-            nfid = _mesh.oppositeFace( fid, pp.vaid(), pp.vcid());
-            ev = pp.acIntersection();
-        }   // end else
+            ev = pp.abIntersection();
+            fid = nfidAB;
+        }   // end else if
     }   // end else
+
     // If we've already parsed nfid, then return -1, otherwise return nfid (which could still be -1 if an edge was reached)
-    return _pfids.count(nfid) > 0 ? -1 : nfid;
+    return _pfids.count(fid) > 0 ? -1 : fid;
 }   // end _findNextFaceEdgeVertex
 
 
@@ -161,7 +214,9 @@ bool PlaneSlicingPath::extend()
 {
     assert( _nfid >= 0);
     Vec3f ev;
-    _nfid = _findNextFaceEdgeVertex( _nfid, _evtxs.back(), ev);
+    int lfid = _nfid;
+    _nfid = _findNextFaceEdgeVertex( ev);
+    _lastParsedFace = lfid;
 
     if ( _nfid >= 0)
     {
@@ -171,7 +226,8 @@ bool PlaneSlicingPath::extend()
         else
         {
             assert( !ev.array().isNaN().any());
-            _evtxs.push_back( ev);
+            if ( ev != _evtxs.back())   // Ensure a step of non-zero magnitude is recorded
+                _evtxs.push_back( ev);
         }   // end else
     }   // end if
 

@@ -51,11 +51,11 @@ public:
     bool extend();
 
 protected:
-    virtual Vec3f faceSlicingPlane( int thisFid, const Vec3f&) const = 0;
+    virtual Vec3f faceSlicingPlane( int thisFid) const = 0;
 
     inline const Mesh& mesh() const { return _mesh;}
 
-    inline const Vec3f& lastVertexAdded() const { return _evtxs.back();}
+    inline const std::deque<Vec3f> &edgeCrossings() const { return _evtxs;}
 
     inline const int lastParsedFace() const { return _lastParsedFace;}
 
@@ -71,7 +71,7 @@ private:
 
     void _pushOnInitialToBack( std::vector<Vec3f>& path) const;
     void _pushOnBackToInitial( std::vector<Vec3f>& path) const;
-    int _findNextFaceEdgeVertex( int, const Vec3f&, Vec3f&);
+    int _findNextFaceEdgeVertex( Vec3f&);
 };  // end class
 
 }   // end namespace

@@ -32,7 +32,7 @@ public:
     void setEndPath( const LocalPlaneSlicingPath& spath) { _endPath = &spath;}
 
 protected:
-    Vec3f faceSlicingPlane( int, const Vec3f&) const override;
+    Vec3f faceSlicingPlane( int) const override;
 
 private:
     const LocalPlaneSlicingPath *_endPath;
