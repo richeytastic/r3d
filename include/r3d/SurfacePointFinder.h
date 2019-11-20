@@ -33,7 +33,7 @@ public:
 
     // Finds the point on the surface of the mesh closest to input point t. vidx must be set as the
     // vertex from which to start searching over the surface for the point closest to t.
-    // On return, point fv will either be in the plane of one of the polygons attached to vidx,
+    // On return, point fv will either be in the plane of one of the faces attached to vidx,
     // in which case fid will be set to the ID of this face and vidx will be -1, or fv will be
     // in the same position as vertex vidx in which case vidx will be unchanged and fid will be set
     // to -1. Parameters fid and fv may be set to anything (their correct values will be set upon return).
@@ -43,7 +43,7 @@ public:
 
     /**
      * Same as above but the closet point to t on the surface is returned and the vertex ID and
-     * polygon IDs are optional. If the starting vertex ID is not specified, an undefined mesh
+     * face IDs are optional. If the starting vertex ID is not specified, an undefined mesh
      * vertex is used. This can result in the closest point on the surface being further away
      * than the absolute closest point because a local hill/valley may be preventing progress.
      */

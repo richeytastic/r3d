@@ -18,10 +18,6 @@
 #ifndef R3D_VERTEX_PC_FINDER_H
 #define R3D_VERTEX_PC_FINDER_H
 
-/**
- * Find the principal components of vertex variation with the supplied mesh.
- */
-
 #include "r3dTypes.h"
 
 #ifdef _WIN32
@@ -35,8 +31,7 @@ class r3d_EXPORT VertexPCFinder
 public:
     explicit VertexPCFinder( const MatX3f& verts);
 
-    // Return the eigen vectors of the mesh's vertex distribution.
-    // Client should premultiply the returned matrix by each point to orient.
+    // Return's eigen vectors of the vertex distribution as column vectors.
     inline const Mat3f &operator()() const { return _evs;}
 
 private:

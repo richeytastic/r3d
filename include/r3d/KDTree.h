@@ -46,7 +46,7 @@ public:
     size_t findn( const Vec3f&, size_t n, size_t *nvidxs, float* sqdis=nullptr) const;
 
     /**
-     * Find vertices within r on the mesh to the query point.
+     * Find vertices on the mesh within sqrt(r) of the query point.
      * Returns the number of points found and sets the given vector of matches with
      * each pair giving the vertex index and squared distance.
      */

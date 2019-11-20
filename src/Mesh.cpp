@@ -673,6 +673,21 @@ int Mesh::addFace( int v0, int v1, int v2)
 }   // end addFace
 
 
+void Mesh::setFaces( const FaceMat &fmat)
+{
+    assert( numFaces() == 0);   // Cannot already have faces
+    const int N = int(fmat.rows());
+    for ( int i = 0; i < N; ++i)
+    {
+        // Vertex IDs must already be present
+        assert( _vids.count(fmat(i,0)) > 0);
+        assert( _vids.count(fmat(i,1)) > 0);
+        assert( _vids.count(fmat(i,2)) > 0);
+        addFace( fmat(i,0), fmat(i,1), fmat(i,2));
+    }   // end setFaces
+}   // nd setFaces
+
+
 bool Mesh::removeFace( int fid)
 {
     assert( _fids.count(fid) > 0);
@@ -1565,18 +1580,26 @@ void Mesh::showDebug( bool withDetails) const
 }   // end showDebug
 
 
-MatX3f Mesh::vertices2Matrix() const
+MatX3f Mesh::vertices2Matrix( bool useTransformed) const
 {
     assert( hasSequentialVertexIds());
     const int N = int(numVtxs());
     MatX3f M(N, 3);
-    for ( int i = 0; i < N; ++i)
-        M.row(i) = uvtx(i);
+    if ( useTransformed)
+    {
+        for ( int i = 0; i < N; ++i)
+            M.row(i) = vtx(i);
+    }   // end if
+    else
+    {
+        for ( int i = 0; i < N; ++i)
+            M.row(i) = uvtx(i);
+    }   // end else
     return M;
 }   // end vertices2Matrix
 
 
-FeatMat Mesh::toFeatures( FaceMat &H) const
+FeatMat Mesh::toFeatures( FaceMat &H, bool useTransformed) const
 {
     assert( hasSequentialVertexIds());
     assert( hasSequentialFaceIds());
@@ -1584,11 +1607,20 @@ FeatMat Mesh::toFeatures( FaceMat &H) const
     // Copy in vertex positions and zero out the normal region
     const int N = int(numVtxs());
     FeatMat F(N, 6);
-    for ( int i = 0; i < N; ++i)
+
+    if ( useTransformed)
     {
-        F.block<1,3>(i,0) = uvtx(i);
+        for ( int i = 0; i < N; ++i)
+            F.block<1,3>(i,0) = vtx(i);
+    }   // end if
+    else
+    {
+        for ( int i = 0; i < N; ++i)
+            F.block<1,3>(i,0) = uvtx(i);
+    }   // end else
+
+    for ( int i = 0; i < N; ++i)
         F.block<1,3>(i,3) = Vec3f::Zero();
-    }   // end for
 
     // Copy in face vertex IDs in stored order and calculate and insert the weighted vertex normals
     const int M = int(numFaces());
@@ -1678,90 +1710,85 @@ void Mesh::join( const Mesh& mod, bool txs)
 }   // end join
 
 
-Mesh::Ptr Mesh::extractRadialArea( int vidx, float r) const
+Mesh::Ptr Mesh::extractVerticesSubset( const IntSet& svidxs, size_t nedges) const
 {
-    const float sqr = r*r;
-    const Vec3f& v = uvtx(vidx);
-
-    Mesh::Ptr cm = Mesh::create();
-    const IntSet& fids = faces();
-    for ( int fid : fids)
-    {
-        const Face& fc = face(fid);
-        const Vec3f& v0 = uvtx(fc[0]);
-        const Vec3f& v1 = uvtx(fc[1]);
-        const Vec3f& v2 = uvtx(fc[2]);
-
-        if ( (v-v0).squaredNorm() > sqr || (v-v1).squaredNorm() > sqr || (v-v2).squaredNorm() > sqr)
-            continue;
-
-        int j0 = cm->addVertex( v0);
-        int j1 = cm->addVertex( v1);
-        int j2 = cm->addVertex( v2);
-        cm->addFace( j0, j1, j2);
-    }   // end for
-
-    cm->setTransformMatrix( transformMatrix());
-    return cm;
-}   // end extractRadialArea
-
-
-Mesh::Ptr Mesh::extractSubset( const IntSet& svidxs, size_t nedges) const
-{
-    nedges = std::max<size_t>( 1, nedges);
-
     IntSet fidxs;
 
-    // Copy in seed vertices
-    IntSet allvidxs = svidxs;
-    IntSet avidxs = svidxs;
-    IntSet bvidxs;
-
-    IntSet *rvtxs = &avidxs;
-    IntSet *nvtxs = &bvidxs;
-
-    for ( size_t j = 0; j < nedges; ++j)
+    int v1, v2;
+    if ( nedges == 0)
     {
-        for ( int vidx : *rvtxs)
+        // If nedges == 0, only want faces where all three vertices are in the given set
+        for ( int v0 : svidxs)
         {
-            for ( int fid : faces(vidx))
+            for ( int fid : faces(v0))
             {
-                if ( fidxs.count(fid) > 0)
-                    continue;
-
-                fidxs.insert(fid);
                 const Face& fc = face(fid);
-                for ( int i = 0; i < 3; ++i)
+                fc.opposite( v0, v1, v2);
+                if ( svidxs.count(v1) > 0 && svidxs.count(v2) > 0)
+                    fidxs.insert(fid);
+            }   // end for
+        }   // end for
+    }   // end if
+    else
+    {
+        // Copy in seed vertices
+        IntSet allvidxs = svidxs;
+        IntSet avidxs = svidxs;
+        IntSet bvidxs;
+
+        IntSet *rvtxs = &avidxs;
+        IntSet *nvtxs = &bvidxs;
+
+        for ( size_t j = 0; j < nedges; ++j)
+        {
+            for ( int v0 : *rvtxs)
+            {
+                for ( int fid : faces(v0))
                 {
-                    if ( allvidxs.count(fc[i]) == 0)
+                    if ( fidxs.count(fid) > 0)
+                        continue;
+
+                    fidxs.insert(fid);
+                    const Face& fc = face(fid);
+                    fc.opposite( v0, v1, v2);
+
+                    if ( allvidxs.count(v1) == 0)
                     {
-                        allvidxs.insert(fc[i]);
-                        nvtxs->insert(fc[i]);
+                        allvidxs.insert(v1);
+                        nvtxs->insert(v1);
+                    }   // end if
+                    if ( allvidxs.count(v2) == 0)
+                    {
+                        allvidxs.insert(v2);
+                        nvtxs->insert(v2);
                     }   // end if
                 }   // end for
             }   // end for
+
+            std::swap( rvtxs, nvtxs);
+            nvtxs->clear();
         }   // end for
+    }   // end if
 
-        std::swap( rvtxs, nvtxs);
-        nvtxs->clear();
-    }   // end for
+    return extractFacesSubset( fidxs);
+}   // extractVerticesSubset
 
+
+Mesh::Ptr Mesh::extractFacesSubset( const IntSet &fidxs) const
+{
     Mesh::Ptr cm = Mesh::create();
     for ( int f : fidxs)
     {
         const Face& fc = face(f);
-        const Vec3f& v0 = uvtx(fc[0]);
-        const Vec3f& v1 = uvtx(fc[1]);
-        const Vec3f& v2 = uvtx(fc[2]);
-        const int j0 = cm->addVertex( v0);
-        const int j1 = cm->addVertex( v1);
-        const int j2 = cm->addVertex( v2);
+        const int j0 = cm->addVertex( uvtx(fc[0]));
+        const int j1 = cm->addVertex( uvtx(fc[1]));
+        const int j2 = cm->addVertex( uvtx(fc[2]));
         cm->addFace( j0, j1, j2);
     }   // end for
 
     cm->setTransformMatrix( transformMatrix());
     return cm;
-}   // extractSubset
+}   // end extractFacesSubset
 
 
 size_t Mesh::removeDisconnectedVertices()

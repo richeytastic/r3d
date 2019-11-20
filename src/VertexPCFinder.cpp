@@ -22,7 +22,7 @@ using r3d::Mat3f;
 
 
 namespace {
-Mat3f createCovariance( const Mat3f& P)
+Mat3f createCovariance( const MatX3f& P)
 {
     const size_t N = P.rows();
     Mat3f C = Mat3f::Zero();

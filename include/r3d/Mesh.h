@@ -38,6 +38,7 @@ public:
 
     /**
      * Create and return a new mesh as a simple point cloud (no connectivity).
+     * See function setFaces below to set vertex connectivity from a FaceMat.
      */
     static Ptr fromVertices( const MatX3f &vtxRows);
 
@@ -68,14 +69,15 @@ public:
     bool hasSequentialIds() const { return hasSequentialVertexIds() && hasSequentialFaceIds() && hasSequentialEdgeIds();}
 
     /**
-     * Copy out and return the subregion of this mesh within r units of vertex v.
+     * Copy out and return a subset of faces connected at most N edges from the given initial vertex set.
+     * If N == 0, only faces having all three of their vertices in vtxIds will be returned.
      */
-    Ptr extractRadialArea( int v, float r) const;
+    Ptr extractVerticesSubset( const IntSet& vtxIds, size_t N=0) const;
 
     /**
-     * Copy out and return a subset of faces connected at most N edges from the given initial vertex set.
+     * Copy out and return the subset of faces of this mesh with given face IDs.
      */
-    Ptr extractSubset( const IntSet&, size_t N=1) const;
+    Ptr extractFacesSubset( const IntSet&) const;
 
     /**
      * Join the vertices and faces on the given mesh to this mesh. Note that the raw (untransformed) vertices
@@ -235,6 +237,14 @@ public:
      */
     int addFace( const int* vidxs);
     int addFace( int v0, int v1, int v2);
+
+    /**
+     * Sets face connectivity on a pure point cloud (vertices only). Usually used after
+     * constructing point wise or via Mesh::fromVertices. Obviously, all vertex IDs
+     * referenced in the given matrix must already be present. The order of vertex
+     * IDs given in the columns of each row defines the normal for the face.
+     */
+    void setFaces( const FaceMat&);
 
     /**
      * Remove a face, also removing its ID.
@@ -416,6 +426,11 @@ public:
     inline size_t numMats() const { return _mids.size();}
 
     /**
+     * Test if this mesh has one or more materials defined.
+     */
+    inline bool hasMaterials() const { return numMats() > 0;}
+
+    /**
      * Returns the IDs of the materials set on this mesh.
      * Note that material IDs are not necessarily in sequential order even for a repacked object.
      */
@@ -579,15 +594,16 @@ public:
     /**
      * Create the Eigen feature and face matrices from this object. Note that if using r3d::Curvature,
      * it will be more efficient to use the normals from there rather than recalculating them again here.
-     * The vertex positions copied over are the raw UNTRANSFORMED positions.
+     * The vertex positions copied over are the UNTRANSFORMED positions unless useTransformed is true.
      */
-    FeatMat toFeatures( FaceMat&) const;
+    FeatMat toFeatures( FaceMat&, bool useTransformed=false) const;
 
     /**
-     * Simply create and return the 3 column matrix of vertex UNTRANSFORMED positions with one row per vertex.
+     * Simply create and return the 3 column matrix of vertex positions with one row per vertex.
      * This mesh must have sequential vertex IDs!
+     * The vertex positions copied over are the UNTRANSFORMED positions unless useTransformed is true.
      */
-    MatX3f vertices2Matrix() const;
+    MatX3f vertices2Matrix( bool useTransformed=false) const;
 
     /**
      * Adjust this mesh's vertex positions with those in the columns of the given matrix.
