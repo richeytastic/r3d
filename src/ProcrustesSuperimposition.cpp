@@ -79,7 +79,7 @@ Mat4f ProcrustesSuperimposition::operator()( const MatX3f& inB) const
     // Compute the covariance between B and A (not normalised?)
     const Mat3f C = B.transpose() * _A;
 
-    Eigen::JacobiSVD<Mat3f> svd( C, Eigen::ComputeThinU | Eigen::ComputeThinV);
+    Eigen::JacobiSVD<Mat3f> svd( C, Eigen::ComputeFullU | Eigen::ComputeFullV);
 
     Mat4f t0 = Mat4f::Identity();
     const float scaleFactor = _scaleUp ? _s/sB : 1.0f;

@@ -44,3 +44,39 @@ VertexPCFinder::VertexPCFinder( const MatX3f &m)
     Eigen::EigenSolver<Mat3f> eig(C, true);
     _evs = eig.eigenvectors().real();
 }   // end ctor
+
+
+Mat3f VertexPCFinder::eigenVectors2RotationMatrix( const Mat3f &evs)
+{
+    // Find which column for which vector and ensure positive unit vectors
+    // congruent with desired i,j,k unit directions in 3 space.
+
+    // First find the column vector with the largest absolute X coefficient:
+    int xi = 0;
+    if ( fabsf(evs(0,1)) > fabsf(evs(0,0)))
+        xi = 1;
+    if ( fabsf(evs(0,2)) > fabsf(evs(0,xi)))
+        xi = 2;
+    Vec3f xvec = evs.col(xi);
+
+    // Then get the Y and Z vectors - swapping them if the absolute value of
+    // the Z coefficient in yvec is larger than that of zvec:
+    Vec3f yvec = evs.col((xi+1)%3);
+    Vec3f zvec = evs.col((xi+2)%3);
+    if ( fabsf(yvec[2]) > fabsf(zvec[2]))
+        std::swap( yvec, zvec);
+
+    // Now ensure the vector directions are positive in the canonical directions.
+    if ( xvec[0] < 0)
+        xvec *= -1;
+    if ( yvec[1] < 0)
+        yvec *= -1;
+    if ( zvec[2] < 0)
+        zvec *= -1;
+
+    Mat3f T;
+    T.block<3,1>(0,0) = xvec;
+    T.block<3,1>(0,1) = yvec;
+    T.block<3,1>(0,2) = zvec;
+    return T;
+}   // end eigenVectors2RotationMatrix

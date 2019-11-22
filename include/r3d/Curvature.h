@@ -75,7 +75,7 @@ public:
     static float calcGivensRotation( float a, float b, float& c, float& s);
 
 private:
-    Mesh &_mesh;       // Mesh reference
+    Mesh &_mesh;            // Mesh reference
     MatX3f _vtxNormals;     // Normals at vertices
     VecXf _edgeFaceSums;    // Sum of face areas with rows as edge ID
     VecXf _vtxAdjFacesSum;  // Sum of face areas with rows as vertex ID

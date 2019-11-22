@@ -25,16 +25,25 @@ namespace r3d {
 class r3d_EXPORT Mesh
 {
 public:
-    using Ptr = std::shared_ptr<Mesh>;
-
     /********************************************************************************************************************/
     /****** Creating / Copying ******************************************************************************************/
     /********************************************************************************************************************/
+
+    using Ptr = std::shared_ptr<Mesh>;
 
     /**
      * Create and return a new object mesh ready for data population.
      */
     static Ptr create();
+
+    /**
+     * In general, the static Mesh::create function would be used unless a temporary
+     * Mesh object is needed for whatever reason.
+     */
+    Mesh();
+    Mesh( const Mesh&) = default;
+    Mesh& operator=( const Mesh&) = default;
+    virtual ~Mesh();
 
     /**
      * Create and return a new mesh as a simple point cloud (no connectivity).
@@ -48,6 +57,21 @@ public:
      * The returned mesh will have the source mesh's transformation matrix.
      */
     static Ptr fromVertexSubset( const Mesh &s, const IntSet &vidxs);
+
+    /**
+     * Copy out and return a subset of faces connected at most N edges from the given initial vertex set.
+     * If N == 0, only faces having all three of their vertices in vtxIds will be returned.
+     * Note that materials are NOT set on the returned Mesh; use copyInMaterials on
+     * the returned Mesh if this is desired.
+     */
+    Ptr extractVerticesSubset( const IntSet& vtxIds, size_t N=0) const;
+
+    /**
+     * Copy out and return the subset of faces of this mesh with given face IDs.
+     * Note that materials are NOT set on the returned Mesh; use copyInMaterials on
+     * the returned Mesh if this is desired.
+     */
+    Ptr extractFacesSubset( const IntSet&) const;
 
     /**
      * Create and return a deep copy of this mesh. If the material textures should not
@@ -69,20 +93,9 @@ public:
     bool hasSequentialIds() const { return hasSequentialVertexIds() && hasSequentialFaceIds() && hasSequentialEdgeIds();}
 
     /**
-     * Copy out and return a subset of faces connected at most N edges from the given initial vertex set.
-     * If N == 0, only faces having all three of their vertices in vtxIds will be returned.
-     */
-    Ptr extractVerticesSubset( const IntSet& vtxIds, size_t N=0) const;
-
-    /**
-     * Copy out and return the subset of faces of this mesh with given face IDs.
-     */
-    Ptr extractFacesSubset( const IntSet&) const;
-
-    /**
-     * Join the vertices and faces on the given mesh to this mesh. Note that the raw (untransformed) vertices
+     * Join the vertices and faces from the given mesh to this mesh. Note that the raw (untransformed) vertices
      * from this model are added to the given mesh, and the given mesh should not have its own transform set.
-     * Material texture vertices are also mapped over if txvrts == true.
+     * Material texture vertices are also mapped over if txvrts == true (as well as the textures).
      */
     void join( const Mesh&, bool txvrts=true);
 
@@ -599,6 +612,11 @@ public:
     FeatMat toFeatures( FaceMat&, bool useTransformed=false) const;
 
     /**
+     * Create and return the face matrix from this mesh's face topology.
+     */
+    FaceMat toFaces() const;
+
+    /**
      * Simply create and return the 3 column matrix of vertex positions with one row per vertex.
      * This mesh must have sequential vertex IDs!
      * The vertex positions copied over are the UNTRANSFORMED positions unless useTransformed is true.
@@ -654,11 +672,6 @@ private:
     void _removeEdge( int);
     void _removeFaceUVs( int, int);
     void _addMaterial( int, const cv::Mat&, size_t);
-
-    Mesh();
-    Mesh( const Mesh&) = default;
-    Mesh& operator=( const Mesh&) = default;
-    virtual ~Mesh();
 };  // end class
 
 }   // end namespace

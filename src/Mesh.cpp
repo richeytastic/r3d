@@ -164,11 +164,9 @@ Mesh::Ptr Mesh::fromVertexSubset( const Mesh &src, const IntSet &vidxs)
 }   // end fromVertices
 
 
-// private
 Mesh::Mesh() : _vCounter(0), _fCounter(0), _eCounter(0), _mCounter(0), _tmat(Mat4f::Identity()), _imat(Mat4f::Identity()) {}
 
 
-// private
 Mesh::~Mesh() {}
 
 
@@ -1650,6 +1648,20 @@ FeatMat Mesh::toFeatures( FaceMat &H, bool useTransformed) const
 }   // end toFeatures
 
 
+FaceMat Mesh::toFaces() const
+{
+    assert( hasSequentialFaceIds());
+    const int M = int(numFaces());
+    FaceMat H( M, 3);
+    for ( int i = 0; i < M; ++i)
+    {
+        const int* fvids = fvidxs(i);
+        H.row(i) << fvids[0], fvids[1], fvids[2];
+    }   // end for
+    return H;
+}   // end toFaces
+
+
 bool Mesh::adjustRawVertices( const MatX3f &F)
 {
     if ( !hasSequentialVertexIds())
@@ -1707,6 +1719,9 @@ void Mesh::join( const Mesh& mod, bool txs)
             }   // end if
         }   // end if
     }   // end for
+
+    if ( txs)
+        copyInMaterials( mod, true);
 }   // end join
 
 

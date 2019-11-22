@@ -29,10 +29,20 @@ namespace r3d {
 class r3d_EXPORT VertexPCFinder
 {
 public:
+    // Solved on instantiation.
     explicit VertexPCFinder( const MatX3f& verts);
 
     // Return's eigen vectors of the vertex distribution as column vectors.
     inline const Mat3f &operator()() const { return _evs;}
+
+    // Take eigen vectors and create a rotation matrix by reordering
+    // them to be stored with the eigen vector having the largest
+    // coefficient in the first position in the first column, the
+    // one with the largest coefficient in the second position to
+    // be in the second column and the other one in the third column.
+    // In addition, the vector directions are swapped if dot products
+    // are negative with the canonical X,Y,and Z axes.
+    static Mat3f eigenVectors2RotationMatrix( const Mat3f&);
 
 private:
     Mat3f _evs;
