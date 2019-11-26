@@ -24,7 +24,6 @@ Copier::Copier( const Mesh& source) : _mesh(source)
 {
     _cmesh = Mesh::create();
     _cmesh->copyInMaterials( source, true);    // Copy in all the material data
-    _cmesh->setTransformMatrix( source.transformMatrix());
 }   // end ctor
 
 

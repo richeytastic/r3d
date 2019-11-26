@@ -87,7 +87,7 @@ Mat4f ProcrustesSuperimposition::operator()( const MatX3f& inB) const
     t0.block<3,1>(0,3) = _vbar;
 
     Mat4f t1 = Mat4f::Identity();
-    t1.block<3,1>(0,3) = -_vbar;
+    t1.block<3,1>(0,3) = -vbar;
 
     return t0 * t1;
 }   // end operator()
