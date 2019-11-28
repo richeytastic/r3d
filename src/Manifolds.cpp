@@ -494,7 +494,7 @@ int Manifolds::manifoldId( int f) const
 Mesh::Ptr Manifolds::reduceManifolds( int n) const
 {
     Mesh::Ptr nmod = Mesh::create();
-    nmod->copyInMaterials( *_mesh, true/*Share materials*/);
+    nmod->copyInMaterials( *_mesh);
 
     int v0, v1, v2, nfid, mid;
     n = std::max( 1, std::min( n, int(count())));

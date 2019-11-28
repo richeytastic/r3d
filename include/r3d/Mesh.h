@@ -61,23 +61,20 @@ public:
     /**
      * Copy out and return a subset of faces connected at most N edges from the given initial vertex set.
      * If N == 0, only faces having all three of their vertices in vtxIds will be returned.
-     * Note that materials are NOT set on the returned Mesh; use copyInMaterials on
-     * the returned Mesh if this is desired.
+     * Note that texture is NOT copied over by default unless withTexture is set true.
      */
-    Ptr extractVerticesSubset( const IntSet& vtxIds, size_t N=0) const;
+    Ptr extractVerticesSubset( const IntSet& vtxIds, size_t N=0, bool withTexture=false) const;
 
     /**
      * Copy out and return the subset of faces of this mesh with given face IDs.
-     * Note that materials are NOT set on the returned Mesh; use copyInMaterials on
-     * the returned Mesh if this is desired.
+     * Note that texture is NOT copied over by default unless withTexture is set true.
      */
-    Ptr extractFacesSubset( const IntSet&) const;
+    Ptr extractFacesSubset( const IntSet&, bool withTexture=false) const;
 
     /**
-     * Create and return a deep copy of this mesh. If the material textures should not
-     * be shared (i.e., the texture maps should be cloned), set shareMaterials false.
+     * Create and return a deep copy of this mesh.
      */
-    Ptr deepCopy( bool shareMaterials=true) const;
+    Ptr deepCopy() const;
 
     /**
      * If this object has non sequential IDs for its vertices, faces, or edges, then this
@@ -85,7 +82,7 @@ public:
      * on [0,N) where N is the corresponding number of vertices/faces/edges. If this object
      * already has all its IDs sequentially ordered, this function is equivalent to deepCopy.
      */
-    Ptr repackedCopy( bool shareMaterials=true) const;
+    Ptr repackedCopy() const;
 
     /**
      * Convenience function to check if all of this mesh's IDs are indexed sequentially.
@@ -471,11 +468,9 @@ public:
     void removeAllMaterials();
 
     /**
-     * Copy in the materials from the parameter Mesh to this one. If shareMaterials is true, the texture
-     * images will be shared in memory between the parameter mesh and this one. Set to false to clone the
-     * texture images.
+     * Copy in the materials from the parameter Mesh to this one.
      */
-    void copyInMaterials( const Mesh&, bool shareMaterials=true);
+    void copyInMaterials( const Mesh&);
 
     /**
      * Merge the materials on this object into a single material. Returns the number of materials that

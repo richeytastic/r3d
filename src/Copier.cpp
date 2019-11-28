@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2017 Richard Palmer
+ * Copyright (C) 2019 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ using r3d::Mesh;
 Copier::Copier( const Mesh& source) : _mesh(source)
 {
     _cmesh = Mesh::create();
-    _cmesh->copyInMaterials( source, true);    // Copy in all the material data
+    _cmesh->copyInMaterials( source);    // Copy in all the material data
 }   // end ctor
 
 

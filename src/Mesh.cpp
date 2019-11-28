@@ -93,19 +93,10 @@ size_t Mesh::numTextureEdges( int va, int vb) const
 }   // end numTextureEdges
 
 
-Mesh::Ptr Mesh::deepCopy( bool shareMats) const
-{
-    Mesh *m = new Mesh(*this);
-    if ( !shareMats)
-    {
-        for ( auto &p : m->_mats)
-            p.second._tx = p.second._tx.clone();
-    }   // end for
-    return Ptr( m, [](Mesh *x){delete x;});
-}   // end deepCopy
+Mesh::Ptr Mesh::deepCopy() const { return Ptr( new Mesh(*this), [](Mesh *x){delete x;});}
 
 
-Mesh::Ptr Mesh::repackedCopy( bool shareMats) const
+Mesh::Ptr Mesh::repackedCopy() const
 {
     Mesh *m = new Mesh;
     m->_tmat = _tmat;
@@ -122,7 +113,7 @@ Mesh::Ptr Mesh::repackedCopy( bool shareMats) const
         ffmap[fid] = m->addFace( vvmap[f[0]], vvmap[f[1]], vvmap[f[2]]);
     }   // end for
 
-    m->copyInMaterials( *this, shareMats);   // Note that material IDs don't need to be sequential
+    m->copyInMaterials( *this);   // Note that material IDs don't need to be sequential
     for ( const auto &p : _f2m)
     {
         const Vec2f &uv0 = faceUV(p.first, 0);
@@ -255,13 +246,13 @@ void Mesh::removeAllMaterials()
 }   // end removeAllMaterials
 
 
-void Mesh::copyInMaterials( const Mesh &omc, bool shareMats)
+void Mesh::copyInMaterials( const Mesh &omc)
 {
     const IntSet &matIds = omc.materialIds();
     for ( int mid : matIds)
     {
-        const cv::Mat &tx = omc.texture(mid);
-        _addMaterial( mid, shareMats ? tx : tx.clone(), size_t(std::max(tx.rows, tx.cols)));
+        const cv::Mat tx = omc.texture(mid);
+        _addMaterial( mid, tx, size_t(std::max(tx.rows, tx.cols)));
     }   // end for
     _mCounter = omc._mCounter;
 }   // end copyInMaterials
@@ -1721,11 +1712,11 @@ void Mesh::join( const Mesh& mod, bool txs)
     }   // end for
 
     if ( txs)
-        copyInMaterials( mod, true);
+        copyInMaterials( mod);
 }   // end join
 
 
-Mesh::Ptr Mesh::extractVerticesSubset( const IntSet& svidxs, size_t nedges) const
+Mesh::Ptr Mesh::extractVerticesSubset( const IntSet& svidxs, size_t nedges, bool withTx) const
 {
     IntSet fidxs;
 
@@ -1785,20 +1776,33 @@ Mesh::Ptr Mesh::extractVerticesSubset( const IntSet& svidxs, size_t nedges) cons
         }   // end for
     }   // end if
 
-    return extractFacesSubset( fidxs);
+    return extractFacesSubset( fidxs, withTx);
 }   // extractVerticesSubset
 
 
-Mesh::Ptr Mesh::extractFacesSubset( const IntSet &fidxs) const
+Mesh::Ptr Mesh::extractFacesSubset( const IntSet &fidxs, bool withTx) const
 {
     Mesh::Ptr cm = Mesh::create();
+    if ( withTx)
+        cm->copyInMaterials( *this);
+
     for ( int f : fidxs)
     {
         const Face& fc = face(f);
         const int j0 = cm->addVertex( uvtx(fc[0]));
         const int j1 = cm->addVertex( uvtx(fc[1]));
         const int j2 = cm->addVertex( uvtx(fc[2]));
-        cm->addFace( j0, j1, j2);
+        const int nfid = cm->addFace( j0, j1, j2);
+
+        if ( withTx)
+        {
+            const int mid = faceMaterialId(f);
+            if ( mid >= 0)
+            {
+                const int *uvids = faceUVs(f);
+                cm->setOrderedFaceUVs( mid, nfid, uv(mid, uvids[0]), uv(mid, uvids[1]), uv(mid, uvids[2]));
+            }   // end if
+        }   // end if
     }   // end for
 
     cm->setTransformMatrix( transformMatrix());
