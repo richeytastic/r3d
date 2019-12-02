@@ -249,6 +249,13 @@ public:
     int addFace( int v0, int v1, int v2);
 
     /**
+     * Add a face even if vertices haven't already been given. If any of the vertices hash to the same location
+     * the face is not added and -1 is returned otherwise this is equivalent to calling addVertex three times
+     * followed by addFace with the returned vertex IDs as parameters in corresponding order.
+     */
+    int addFace( const Vec3f& v0, const Vec3f &v1, const Vec3f &v2);
+
+    /**
      * Sets face connectivity on a pure point cloud (vertices only). Usually used after
      * constructing point wise or via Mesh::fromVertices. Obviously, all vertex IDs
      * referenced in the given matrix must already be present. The order of vertex
@@ -667,6 +674,8 @@ private:
     void _removeEdge( int);
     void _removeFaceUVs( int, int);
     void _addMaterial( int, const cv::Mat&, size_t);
+    int _addCheckedVertex( const Vec3f&, size_t);
+    bool _checkNewVertex( const Vec3f&, Vec3f&) const;
 };  // end class
 
 }   // end namespace

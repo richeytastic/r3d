@@ -345,36 +345,49 @@ void Mesh::_removeFaceUVs( int mid, int fid)
 int Mesh::addVertex( float x, float y, float z) { return addVertex( Vec3f(x,y,z));}
 
 
-int Mesh::addVertex( const Vec3f &V)
+int Mesh::_addCheckedVertex( const Vec3f &v, size_t hkey)
 {
-    if ( V.array().isNaN().any())
-    {
-#ifndef NDEBUG
-        std::cerr << "[WARNING] r3d::Mesh::addVertex: vertex is NaN!" << std::endl;
-#endif
-        return -1;
-    }   // end if
-
-    Vec3f v = V;
-    if ( !hasFixedTransform())
-    {
-        v = transform( _imat, V);
-#ifndef NDEBUG
-        std::cerr << "[WARNING] r3d::Mesh::addVertex: transform is not Identity!" << std::endl;
-#endif
-    }   // end if
-
-    size_t key = hash( v, HASH_NDP);
-    if ( _v2id.count( key) > 0)
-        return _v2id.at(key);
+    if ( _v2id.count( hkey) > 0)
+        return _v2id.at(hkey);
 
     const int vi = (int)_vCounter++;
 
-    _v2id[key] = vi;
+    _v2id[hkey] = vi;
     _vids.insert(vi);
     _vtxs[vi] = v;
 
     return vi;
+}   // end _addCheckedVertex
+
+
+bool Mesh::_checkNewVertex( const Vec3f &V, Vec3f &v) const
+{
+    if ( V.array().isNaN().any())
+    {
+#ifndef NDEBUG
+        std::cerr << "[ERROR] r3d::Mesh::_checkNewVertex: vertex is NaN!" << std::endl;
+#endif
+        return false;
+    }   // end if
+
+    v = V;
+    if ( !hasFixedTransform())
+    {
+        v = transform( _imat, V);
+#ifndef NDEBUG
+        std::cerr << "[WARNING] r3d::Mesh::_checkNewVertex: vertex added to transformed mesh!" << std::endl;
+#endif
+    }   // end if
+    return true;
+}   // end _checkNewVertex
+
+
+int Mesh::addVertex( const Vec3f &V)
+{
+    Vec3f v;
+    if ( !_checkNewVertex( V, v))
+        return -1;
+    return _addCheckedVertex( v, hash( v, HASH_NDP));
 }   // end addVertex
 
 
@@ -659,6 +672,38 @@ int Mesh::addFace( int v0, int v1, int v2)
     _e2f[e20].insert(fid);
 
     return fid;
+}   // end addFace
+
+
+int Mesh::addFace( const Vec3f &V0, const Vec3f &V1, const Vec3f &V2)
+{
+    Vec3f v0;
+    if ( !_checkNewVertex( V0, v0))
+        return -1;
+    Vec3f v1;
+    if ( !_checkNewVertex( V1, v1))
+        return -1;
+    Vec3f v2;
+    if ( !_checkNewVertex( V2, v2))
+        return -1;
+
+    const size_t k0 = hash( v0, HASH_NDP);
+    const size_t k1 = hash( v1, HASH_NDP);
+    const size_t k2 = hash( v2, HASH_NDP);
+    if ((k0 == k1) || (k0 == k2) || (k1 == k2))
+        return -1;
+
+    const int i0 = _addCheckedVertex( v0, k0);
+    if ( i0 < 0)
+        return -1;
+    const int i1 = _addCheckedVertex( v1, k1);
+    if ( i1 < 0)
+        return -1;
+    const int i2 = _addCheckedVertex( v2, k2);
+    if ( i2 < 0)
+        return -1;
+
+    return addFace( i0, i1, i2);
 }   // end addFace
 
 

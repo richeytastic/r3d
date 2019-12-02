@@ -253,6 +253,11 @@ float Bounds::zlen() const
 }   // end zlen
 
 
+float Bounds::width() const { return _maxe[0] - _mine[0];}
+float Bounds::height() const { return _maxe[1] - _mine[1];}
+float Bounds::depth() const { return _maxe[2] - _mine[2];}
+
+
 float Bounds::diagonal() const { return (maxCorner() - minCorner()).norm();}
 
 

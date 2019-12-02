@@ -123,6 +123,16 @@ public:
     float zlen() const;
 
     /**
+     * Return the height, width, and depth of the bounds. These values are calculated
+     * from the extents - i.e. the minimum space in world coordinates that these bounds
+     * take up. Width is along the X axis, height along the Y axis, and depth
+     * is measured along the Z axis.
+     */
+    float width() const;
+    float height() const;
+    float depth() const;
+
+    /**
      * Return the diagonal distance.
      */
     float diagonal() const;

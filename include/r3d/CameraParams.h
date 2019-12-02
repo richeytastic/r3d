@@ -27,17 +27,40 @@
 
 namespace r3d {
 
-struct r3d_EXPORT CameraParams
+class r3d_EXPORT CameraParams
 {
+public:
     CameraParams( const Vec3f &pos=Vec3f(0,0,1),
                   const Vec3f &focus=Vec3f(0,0,0),
                   const Vec3f &up=Vec3f(0,1,0),     // +ve Y
                   float fov=30);   // 30 degrees vertical field of view
 
-    Vec3f pos;      // Camera position
-    Vec3f focus;    // Camera focus
-    Vec3f up;       // Camera up vector
-    float fov;      // Vertical field of view in degrees (must be > 0 and <= 180)
+    // Return the camera position.
+    inline const Vec3f& pos() const { return _pos;}
+
+    // Where the camera is focused.
+    inline const Vec3f& focus() const { return _foc;}
+
+    // The "up" vector for the camera view.
+    inline const Vec3f& up() const { return _upv;}
+
+    // The vetical field of view in degrees in (0,180].
+    inline float fov() const { return _fov;}
+
+    // Get the distance between the camera position and its focus.
+    inline float distance() const { return (pos() - focus()).norm();}
+
+    // Set a new focus and position on the camera.
+    // Returns false if unable to set because the (postion - focus)
+    // vector is equal to the current up vector.
+    bool set( const Vec3f &focus, const Vec3f &position);
+
+    // Set a new field of view in degrees (constrained to be in (0,180]).
+    void setFoV( float v);
+
+    // Given a view radius for the image plane, set a new field
+    // of view while keeping the camera position fixed.
+    void setViewRadius( float r);
 
     // Reposition the camera r units from the focus (or a new focus if given)
     // along the line between the existing camera position and the focus.
@@ -63,12 +86,17 @@ struct r3d_EXPORT CameraParams
 
     // Returns the standardised focal length between 0 and 1.
     float calcFocalLength() const; // cos(fovRads(fov)/2)/sin(fovRads(fov)/2)
-};  // end struct
+
+private:
+    Vec3f _pos; // Camera position
+    Vec3f _foc; // Camera focus
+    Vec3f _upv; // Camera up vector
+    float _fov; // Vertical field of view in degrees (must be > 0 and <= 180)
+};  // end class
+
+
+r3d_EXPORT std::ostream& operator<<( std::ostream&, const r3d::CameraParams&);
 
 }   // end namespace
-
-
-r3d_EXPORT std::ostream& operator<<( std::ostream& os, const r3d::CameraParams&);
-
 
 #endif
