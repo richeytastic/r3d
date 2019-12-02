@@ -42,7 +42,29 @@ VertexPCFinder::VertexPCFinder( const MatX3f &m)
         P.row(i) = (Vec3f)m.row(i) - mean;  // Transform to origin
     const Mat3f C = createCovariance( P);
     Eigen::EigenSolver<Mat3f> eig(C, true);
-    _evs = eig.eigenvectors().real();
+    const r3d::Mat3f evecs = eig.eigenvectors().real();
+    const r3d::Vec3f evals = eig.eigenvalues().real();
+
+    // Reorder based on magnitude of eigenvalues
+    const r3d::Vec3f aevals = evals.cwiseAbs();
+    // Assume aevals[0] > aevals[1]
+    int a = 0;
+    int b = 1;
+    if ( aevals[1] > aevals[0])
+        std::swap(a,b);
+    int c = 2;
+    if ( aevals[2] > aevals[a])
+        std::swap(a,c);
+    if ( aevals[c] > aevals[b])
+        std::swap(b,c);
+    assert( aevals[a] >= aevals[b] && aevals[b] >= aevals[c]);
+
+    _evals[0] = evals[a];
+    _evals[1] = evals[b];
+    _evals[2] = evals[c];
+    _evecs.col(0) = evecs.col(a);
+    _evecs.col(1) = evecs.col(b);
+    _evecs.col(2) = evecs.col(c);
 }   // end ctor
 
 

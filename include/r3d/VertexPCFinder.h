@@ -33,7 +33,9 @@ public:
     explicit VertexPCFinder( const MatX3f& verts);
 
     // Return's eigen vectors of the vertex distribution as column vectors.
-    inline const Mat3f &operator()() const { return _evs;}
+    // The eigenvectors are sorted in descending order by eigenvalue magnitude.
+    inline const Mat3f &eigenVectors() const { return _evecs;}
+    inline const Vec3f &eigenValues() const { return _evals;}
 
     // Take eigen vectors and create a rotation matrix by reordering
     // them to be stored with the eigen vector having the largest
@@ -45,7 +47,8 @@ public:
     static Mat3f eigenVectors2RotationMatrix( const Mat3f&);
 
 private:
-    Mat3f _evs;
+    Mat3f _evecs;
+    Vec3f _evals;
 };  // end class
 
 }   // end namespace
