@@ -63,7 +63,7 @@ set( INCLUDE_FILES
     "${INCLUDE_F}/Transformer.h"
     #"${INCLUDE_F}/VertexAdder.h"
     "${INCLUDE_F}/VertexCrossingTimeCalculator.h"
-    "${INCLUDE_F}/VertexPCFinder.h"
+    "${INCLUDE_F}/VectorPCFinder.h"
     )
 
 set( SRC_FILES
@@ -113,7 +113,7 @@ set( SRC_FILES
     ${SRC_DIR}/Transformer
     #${SRC_DIR}/VertexAdder
     ${SRC_DIR}/VertexCrossingTimeCalculator
-    ${SRC_DIR}/VertexPCFinder
+    ${SRC_DIR}/VectorPCFinder
     )
 
 add_library( ${PROJECT_NAME} ${SRC_FILES} ${INCLUDE_FILES})

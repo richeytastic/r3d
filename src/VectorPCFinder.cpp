@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ************************************************************************/
 
-#include <VertexPCFinder.h>
-using r3d::VertexPCFinder;
+#include <VectorPCFinder.h>
+using r3d::VectorPCFinder;
 using r3d::MatX3f;
 using r3d::Mat3f;
 
@@ -33,7 +33,7 @@ Mat3f createCovariance( const MatX3f& P)
 }   // end namespace
 
 
-VertexPCFinder::VertexPCFinder( const MatX3f &m)
+VectorPCFinder::VectorPCFinder( const MatX3f &m)
 {
     const size_t N = m.rows();
     const Vec3f mean = m.colwise().sum() / N;   // Mean position
@@ -68,7 +68,7 @@ VertexPCFinder::VertexPCFinder( const MatX3f &m)
 }   // end ctor
 
 
-Mat3f VertexPCFinder::eigenVectors2RotationMatrix( const Mat3f &evs)
+Mat3f VectorPCFinder::eigenVectors2RotationMatrix( const Mat3f &evs)
 {
     // Find which column for which vector and ensure positive unit vectors
     // congruent with desired i,j,k unit directions in 3 space.

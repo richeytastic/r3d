@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ************************************************************************/
 
-#ifndef R3D_VERTEX_PC_FINDER_H
-#define R3D_VERTEX_PC_FINDER_H
+#ifndef R3D_VECTOR_PC_FINDER_H
+#define R3D_VECTOR_PC_FINDER_H
 
 #include "r3dTypes.h"
 
@@ -26,11 +26,11 @@
 
 namespace r3d {
 
-class r3d_EXPORT VertexPCFinder
+class r3d_EXPORT VectorPCFinder
 {
 public:
     // Solved on instantiation.
-    explicit VertexPCFinder( const MatX3f& verts);
+    explicit VectorPCFinder( const MatX3f& verts);
 
     // Return's eigen vectors of the vertex distribution as column vectors.
     // The eigenvectors are sorted in descending order by eigenvalue magnitude.
