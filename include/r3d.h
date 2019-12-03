@@ -37,7 +37,6 @@
 #include "r3d/FunctionMapper.h"
 #include "r3d/GlobalPlaneSlicingPath.h"
 #include "r3d/HoleFiller.h"
-#include "r3d/ICPAligner.h"
 #include "r3d/Image.h"
 #include "r3d/Internal.h"
 #include "r3d/LocalPlaneSlicingPath.h"
@@ -59,6 +58,6 @@
 #include "r3d/TetrahedronReplacer.h"
 #include "r3d/Transformer.h"
 #include "r3d/VertexCrossingTimeCalculator.h"
-#include "r3d/VertexPCFinder.h"
+#include "r3d/VectorPCFinder.h"
 
 #endif
