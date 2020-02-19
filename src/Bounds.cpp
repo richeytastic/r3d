@@ -151,9 +151,12 @@ Bounds::Ptr Bounds::deepCopy() const
 
 void Bounds::setTransformMatrix( const Mat4f& tmat)
 {
-    _tmat = tmat;
-    _imat = tmat.inverse();
-    _calcExtents();
+    if ( tmat != _tmat)
+    {
+        _tmat = tmat;
+        _imat = tmat.inverse();
+        _calcExtents();
+    }   // end if
 }   // end setTransformMatrix
 
 
@@ -165,10 +168,13 @@ void Bounds::addTransformMatrix( const Mat4f& tmat)
 
 void Bounds::fixTransformMatrix()
 {
-    // The extents will be the same as the new corners given that we're resetting to the identity matrix.
-    _mine = _minc = minCorner();
-    _maxe = _maxc = maxCorner();
-    _tmat = _imat = Mat4f::Identity();
+    if ( _tmat != Mat4f::Identity())
+    {
+        // The extents will be the same as the new corners given that we're resetting to the identity matrix.
+        _mine = _minc = minCorner();
+        _maxe = _maxc = maxCorner();
+        _tmat = _imat = Mat4f::Identity();
+    }   // end if
 }   // end fixTransformMatrix
 
 

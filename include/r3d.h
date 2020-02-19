@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2019 Richard Palmer
+ * Copyright (C) 2020 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@
 #include "r3d/FaceUnfolder.h"
 #include "r3d/FaceUnfoldingVertexSearcher.h"
 #include "r3d/FastMarcher.h"
+#include "r3d/FrontFinder.h"
 #include "r3d/FunctionMapper.h"
 #include "r3d/GlobalPlaneSlicingPath.h"
 #include "r3d/HoleFiller.h"

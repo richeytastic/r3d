@@ -262,9 +262,8 @@ void Material::removeFaceUVs( int fid)
 /*********************************************************/
 
 
-size_t r3d::hash( const Vec3f &v, size_t ndp)
+size_t r3d::hash( const Vec3f &v, size_t ndp, size_t h)
 {
-    size_t h = 0;
     boost::hash_combine( h, roundndp(v[0], ndp));
     boost::hash_combine( h, roundndp(v[1], ndp));
     boost::hash_combine( h, roundndp(v[2], ndp));
@@ -272,9 +271,8 @@ size_t r3d::hash( const Vec3f &v, size_t ndp)
 }   // end hash
 
 
-size_t r3d::hash( const Vec2f &v, size_t ndp)
+size_t r3d::hash( const Vec2f &v, size_t ndp, size_t h)
 {
-    size_t h = 0;
     boost::hash_combine( h, roundndp( v[0], ndp));
     boost::hash_combine( h, roundndp( v[1], ndp));
     return h;

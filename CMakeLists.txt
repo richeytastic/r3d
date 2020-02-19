@@ -34,6 +34,7 @@ set( INCLUDE_FILES
     "${INCLUDE_F}/FaceUnfolder.h"
     "${INCLUDE_F}/FaceUnfoldingVertexSearcher.h"
     "${INCLUDE_F}/FastMarcher.h"
+    "${INCLUDE_F}/FrontFinder.h"
     "${INCLUDE_F}/FunctionMapper.h"
     "${INCLUDE_F}/GlobalPlaneSlicingPath.h"
     "${INCLUDE_F}/HoleFiller.h"
@@ -85,6 +86,7 @@ set( SRC_FILES
     ${SRC_DIR}/FaceUnfolder
     ${SRC_DIR}/FaceUnfoldingVertexSearcher
     ${SRC_DIR}/FastMarcher
+    ${SRC_DIR}/FrontFinder
     ${SRC_DIR}/FunctionMapper
     ${SRC_DIR}/HoleFiller
     ${SRC_DIR}/Image

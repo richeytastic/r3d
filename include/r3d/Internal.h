@@ -120,9 +120,11 @@ private:
 
 /**
  * Float values are rounded to ndp decimal places, then hash combined and returned.
+ * An existing hash value can be provided which is combined with the new value before returning
+ * so that long trains of Vec2/3fs can be hashed together.
  */
-r3d_EXPORT size_t hash( const Vec3f&, size_t ndp);
-r3d_EXPORT size_t hash( const Vec2f&, size_t ndp);
+r3d_EXPORT size_t hash( const Vec3f&, size_t ndp, size_t h=0);
+r3d_EXPORT size_t hash( const Vec2f&, size_t ndp, size_t h=0);
 
 struct HashFace : std::unary_function<Face, size_t> { size_t operator()( const Face&) const;};
 struct HashEdge : std::unary_function<Edge, size_t> { size_t operator()( const Edge&) const;};

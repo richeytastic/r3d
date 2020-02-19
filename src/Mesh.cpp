@@ -163,9 +163,12 @@ Mesh::~Mesh() {}
 
 void Mesh::setTransformMatrix( const Mat4f &tmat)
 {
-    _tvtxs.clear(); // Will force recalculations of vertex positions
-    _tmat = tmat;
-    _imat = tmat.inverse();
+    if ( tmat != _tmat)
+    {
+        _tvtxs.clear(); // Will force recalculations of vertex positions
+        _tmat = tmat;
+        _imat = tmat.inverse();
+    }   // end if
 }   // end setTransformMatrix
 
 
@@ -177,18 +180,20 @@ void Mesh::addTransformMatrix( const Mat4f &tmat)
 
 void Mesh::fixTransformMatrix()
 {
-    for ( int vidx : _vids)
-        _vtxs[vidx] = vtx(vidx); // Ensures transform against existing matrix is done.
-    _tmat = Mat4f::Identity();  // NB not necessary to clear vertex cache _tvtxs
-    _imat = _tmat;
+    if ( !hasFixedTransform())
+    {
+        for ( int vidx : _vids)
+            _vtxs[vidx] = vtx(vidx); // Ensures transform against existing matrix is done.
+        _imat = _tmat = Mat4f::Identity();  // NB not necessary to clear vertex cache _tvtxs
+    }   // end if
 }   // end fixTransformMatrix
 
 
 const Vec3f &Mesh::vtx( int vidx) const
 {
+    assert( _vtxs.count(vidx) > 0);
     if ( _tvtxs.count(vidx) == 0)   // Refresh transform?
     {
-        assert( _vtxs.count(vidx) > 0);
         Vec4f hvec;
         hvec << _vtxs.at(vidx), 1;
         _tvtxs[vidx] = (_tmat * hvec).segment<3>(0);    // _tvtxs is mutable
@@ -413,14 +418,14 @@ bool Mesh::removeVertex( int vi)
 }   // end removeVertex
 
 
-Vec2f Mesh::calcTextureCoords( int fidx, const Vec3f &p) const
+Vec2f Mesh::calcTextureCoords( int fid, const Vec3f &p) const
 {
-    const int matId = faceMaterialId( fidx);
+    const int matId = faceMaterialId( fid);
     assert( matId >= 0);
     if ( matId < 0)
         return Vec2f(-1,-1);
 
-    const int *vidxs = fvidxs(fidx);
+    const int *vidxs = fvidxs(fid);
     const Vec3f &v0 = uvtx(vidxs[0]);
     const Vec3f &v1 = uvtx(vidxs[1]);
     const Vec3f &v2 = uvtx(vidxs[2]);
@@ -429,7 +434,7 @@ Vec2f Mesh::calcTextureCoords( int fidx, const Vec3f &p) const
     Vec3f bcds = calcBarycentric( v0, v1, v2, p);
 
     // Get the UV coordinates corresponding to the triangle's vertices
-    const int *uvs = faceUVs( fidx);
+    const int *uvs = faceUVs( fid);
     const Vec2f &t0 = uv( matId, uvs[0]);
     const Vec2f &t1 = uv( matId, uvs[1]);
     const Vec2f &t2 = uv( matId, uvs[2]);
