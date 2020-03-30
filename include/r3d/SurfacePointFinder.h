@@ -31,14 +31,16 @@ class r3d_EXPORT SurfacePointFinder
 public:
     explicit SurfacePointFinder( const Mesh& m) : _mesh(m) {}
 
-    // Finds the point on the surface of the mesh closest to input point t. vidx must be set as the
-    // vertex from which to start searching over the surface for the point closest to t.
-    // On return, point fv will either be in the plane of one of the faces attached to vidx,
-    // in which case fid will be set to the ID of this face and vidx will be -1, or fv will be
-    // in the same position as vertex vidx in which case vidx will be unchanged and fid will be set
-    // to -1. Parameters fid and fv may be set to anything (their correct values will be set upon return).
-    // Safe to pass in same argument as both t and fv (if don't want to keep t).
-    // Returns squared l2-norm of (fv-t).
+    /**
+     * Finds the point on the mesh surface closest to input point t. vidx must be set as the
+     * vertex from which to start searching over the surface for the point closest to t.
+     * On return, point fv will either be in the plane of one of the faces attached to vidx,
+     * in which case fid will be set to the ID of this face and vidx will be -1, or fv will be
+     * in the same position as vertex vidx in which case vidx will be unchanged and fid will be set
+     * to -1. Parameters fid and fv may be set to anything (their correct values will be set upon return).
+     * Safe to pass in same argument as both t and fv (if don't want to keep t).
+     * Returns squared l2-norm of (fv-t).
+     */
     float find( const Vec3f& t, int& vidx, int& fid, Vec3f& fv) const;
 
     /**

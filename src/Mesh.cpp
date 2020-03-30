@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2019 Richard Palmer
+ * Copyright (C) 2020 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@ using r3d::Material;
 using r3d::Vec2i;
 using r3d::Vec2f;
 using r3d::Vec3f;
+using r3d::Vec3d;
 using r3d::Mat4f;
 using r3d::MatX3f;
 using r3d::FeatMat;
@@ -41,6 +42,7 @@ using r3d::FaceMat;
 namespace {
 static const IntSet EMPTY_INT_SET;
 static const size_t HASH_NDP = 4;   // KEEP THIS AS 4!!!!
+static const float MATRIX_PRECISION = 1e-4f;
 }   // end namespace
 
 
@@ -187,6 +189,12 @@ void Mesh::fixTransformMatrix()
         _imat = _tmat = Mat4f::Identity();  // NB not necessary to clear vertex cache _tvtxs
     }   // end if
 }   // end fixTransformMatrix
+
+
+bool Mesh::hasFixedTransform() const
+{
+    return _tmat.isIdentity( MATRIX_PRECISION);
+}   // end hasFixedTransform
 
 
 const Vec3f &Mesh::vtx( int vidx) const
@@ -1347,25 +1355,29 @@ Vec3f Mesh::nearestPositionWithinFace( int fid, const Vec3f &inP) const
 
 
 namespace {
-float calcTwiceArea( const Vec3f &a, const Vec3f &b, const Vec3f &c) { return (a-b).cross(b-c).norm();}
+double calcTwiceArea( const Vec3d &a, const Vec3d &b, const Vec3d &c)
+{
+    return (a-b).cross(b-c).norm();
+}   // end calcTwiceArea
 }   // end namespace
 
 
-bool Mesh::isVertexInsideFace( int fid, const Vec3f &P) const
+bool Mesh::isVertexInsideFace( int fid, const Vec3f &fP) const
 {
     const int *vidxs = fvidxs( fid);
-    const Vec3f &A = vtx( vidxs[0]);
-    const Vec3f &B = vtx( vidxs[1]);
-    const Vec3f &C = vtx( vidxs[2]);
+    const Vec3d A = vtx( vidxs[0]).cast<double>();
+    const Vec3d B = vtx( vidxs[1]).cast<double>();
+    const Vec3d C = vtx( vidxs[2]).cast<double>();
+    const Vec3d P = fP.cast<double>();
 
-    // These are all actually twice the areas of the respective triangles - division by 2 for all not necessary.
-    const float areaABC = calcTwiceArea( A,B,C);
-    const float areaPAB = calcTwiceArea( P,A,B);
-    const float areaPBC = calcTwiceArea( P,B,C);
-    const float areaPCA = calcTwiceArea( P,C,A);
+    // All twice the areas of the respective triangles so division by 2 for all not necessary.
+    const double areaABC = calcTwiceArea( A,B,C);
+    const double areaPAB = calcTwiceArea( P,A,B);
+    const double areaPBC = calcTwiceArea( P,B,C);
+    const double areaPCA = calcTwiceArea( P,C,A);
 
     // This only works if P is in the plane of fid.
-    return fabsf(areaPAB + areaPBC + areaPCA - areaABC) <= 1e-4f;
+    return fabs(areaPAB + areaPBC + areaPCA - areaABC) <= 1e-4;
 }   // end isVertexInsideFace
 
 

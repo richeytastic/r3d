@@ -29,7 +29,7 @@ class KDTree::Impl
 public:
     explicit Impl( const Mesh& mesh) : _pcloud(mesh)
     {
-        _kdtree = new NanoKDTree( 3, _pcloud, nanoflann::KDTreeSingleIndexAdaptorParams(10)); // What's the difference with 15?
+        _kdtree = new NanoKDTree( 3, _pcloud, nanoflann::KDTreeSingleIndexAdaptorParams(15)); // What's the difference with 15?
         _kdtree->buildIndex();
     }   // end ctor
 

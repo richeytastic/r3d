@@ -25,6 +25,7 @@ set( INCLUDE_FILES
     "${INCLUDE_F}/Copier.h"
     "${INCLUDE_F}/Curvature.h"
     "${INCLUDE_F}/CurvatureMetrics.h"
+    "${INCLUDE_F}/DirectedSurfacePointFinder.h"
     "${INCLUDE_F}/EdgeFaceAdder.h"
     "${INCLUDE_F}/FaceAngles.h"
     "${INCLUDE_F}/FaceInterpolator.h"
@@ -77,6 +78,7 @@ set( SRC_FILES
     ${SRC_DIR}/Copier
     ${SRC_DIR}/Curvature
     ${SRC_DIR}/CurvatureMetrics
+    ${SRC_DIR}/DirectedSurfacePointFinder
     ${SRC_DIR}/EdgeFaceAdder
     ${SRC_DIR}/FaceAngles
     ${SRC_DIR}/FaceInterpolator

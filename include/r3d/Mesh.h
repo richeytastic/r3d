@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2019 Richard Palmer
+ * Copyright (C) 2020 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -134,7 +134,7 @@ public:
      * Returns true iff this mesh's transform matrix has been fixed (is the identity matrix) so that its
      * raw and transformed vertices are the same (i.e. the return value for uvtx(i) == vtx(i) forall i).
      */
-    bool hasFixedTransform() const { return _tmat == Mat4f::Identity();}
+    bool hasFixedTransform() const;
 
 
     /********************************************************************************************************************/
