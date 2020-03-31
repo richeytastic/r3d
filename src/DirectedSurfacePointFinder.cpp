@@ -25,47 +25,33 @@ using r3d::Vec3f;
 // u must be a unit vector in the direction we want to move x
 int DirectedSurfacePointFinder::find( Vec3f x, const Vec3f &u, Vec3f &y) const
 {
-    /*
-    std::cerr << "-------------------------------------------------" << std::endl;
-    std::cerr << "x = " << x.transpose() << std::endl;
-    std::cerr << "u = " << u.transpose() << std::endl;
-    */
-
+    static const size_t MAX_LOOPS = 10;
     const Mesh &mesh = _kdt.mesh();
     int lvidx = 0;
     int vidx = -1;
+    float maxd = 0.0f;
 
-    static const int MAXLOOPS = 7;
-    int loopCount = 0;
-    while ( lvidx != vidx && loopCount++ < MAXLOOPS)
+    while ( true)
     {
-        float minSqDis = FLT_MAX;
-        while ( true)
+        lvidx = vidx;
+        Vec3f ix = x;
+        size_t loopCount = 0;
+        while ( vidx == lvidx && loopCount < MAX_LOOPS)
         {
-            lvidx = vidx;
-            float sqdis;
-            vidx = _kdt.find( x, &sqdis);
-
-            /*
-            std::cerr << x.transpose() << " near " << vidx << " sqdis = " << sqdis;
-            if ( sqdis > 20.0f)
-                std::cerr << " WHAT!!";
-            std::cerr << std::endl;
-            */
-
-            if ( vidx == lvidx || sqdis > minSqDis)
-                break;
-            else
-            {
-                minSqDis = sqdis;
-                x += sqrt(sqdis) * u;
-            }   // end else
+            x = ix + loopCount*maxd * u;
+            vidx = _kdt.find( x);
+            loopCount++;
         }   // end while
 
-        // At loop exit, point x has been found to be closest to vertex vidx after
-        // two consecutive iterations. Now find the face that x projects into.
-        Vec3f nearY = x;
-        float minM = FLT_MAX;
+        if ( vidx == lvidx) // Fail?
+            break;
+
+        // Try to project into one of the connected faces of vidx.
+        // If we can, then we're done. If not, then the next x is
+        // set as a point further along from x in the direction of u
+        // by an amount equal to twice the largest distance from x to any
+        // vertex connected to vidx (including vidx) as long as the
+        // projection of that vertex from x is in the direction of u.
         for ( int fid : mesh.faces( vidx))
         {
             const Vec3f p = mesh.projectToFacePlane( fid, x);
@@ -74,24 +60,11 @@ int DirectedSurfacePointFinder::find( Vec3f x, const Vec3f &u, Vec3f &y) const
             y = x + f*u;
             if ( mesh.isVertexInsideFace( fid, y))
                 return fid;
-
-            const float m = fabsf(f);
-            if ( m <= minM)
-            {
-                minM = m;
-                nearY = y;
-            }   // end if
         }   // end for
 
-        // The intersection point may not be inside the face. If not, just keep going!
-        /*
-        std::cerr << loopCount << ") Intersection not found on any face connected to "
-                  << vidx << " (" << mesh.vtx(vidx).transpose() << ")" << std::endl;
-        std::cerr << "x = " << x.transpose() << " (mag = " << minM << ")" << std::endl;
-        */
-
-        x = nearY;
-        vidx = -1;
+        maxd = (mesh.vtx(vidx) - x).norm();
+        for ( int cvidx : mesh.cvtxs(vidx))
+            maxd = std::max( (mesh.vtx(cvidx) - x).dot(u), maxd);
     }   // end while
 
     return -1;
