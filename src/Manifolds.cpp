@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2019 Richard Palmer
+ * Copyright (C) 2020 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -475,10 +475,10 @@ const Boundaries& Manifold::boundaries() const
     if ( _bnds.count() == 0 && !_edges.empty())
     {// Find the boundaries in this manifold
 #ifndef NDEBUG
-        int nbs = _bnds.sort( _mesh, _edges);
+        int nbs = _bnds.sort( *_mesh, _edges);
         assert( nbs >= 0);
 #else
-        _bnds.sort( _mesh, _edges);
+        _bnds.sort( *_mesh, _edges);
 #endif
     }   // end if
     return _bnds;

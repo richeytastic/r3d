@@ -82,10 +82,12 @@ float IterativeSurfacePathFinder::findPath( const Vec3f& spos, const Vec3f& fpos
     IntSet *oldCrossedSet = &crossedSet0;
     IntSet *newCrossedSet = &crossedSet1;
 
+/*
 #ifndef NDEBUG
     std::cout << "--------------------------------------------------------------------------------------------" << std::endl;
     std::cout << "Looking for path between " << v0.transpose() << " and " << v1.transpose() << std::endl;
 #endif
+*/
     static const size_t MAX_ITERS = 10;
     size_t numIts = 0;
     while ( true)
@@ -124,9 +126,10 @@ float IterativeSurfacePathFinder::findPath( const Vec3f& spos, const Vec3f& fpos
             break;
         }   // end else
     }   // end while
-
+/*
 #ifndef NDEBUG
     std::cout << "Found path after " << numIts << " iterations" << std::endl;
 #endif
+*/
     return calcPathLength( _lpath);
 }   // end findPath

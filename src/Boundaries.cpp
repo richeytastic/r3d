@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2019 Richard Palmer
+ * Copyright (C) 2020 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,13 +53,13 @@ namespace {
 struct VtxCounts
 {
     // Collect the number of times each vertex is entered or exited (counts always obviously even).
-    VtxCounts( const Mesh *cmesh, const IntSet& edgeIds) : _cmesh(cmesh), _edgeIds(edgeIds)
+    VtxCounts( const Mesh &cmesh, const IntSet& edgeIds) : _cmesh(cmesh), _edgeIds(edgeIds)
     {
         assert( edgeIds.size() > 2);   // Need at least one boundary on one triangle!
         int v0, v1;
         for ( int eid : edgeIds)
         {
-            cmesh->edge( eid, v0, v1);
+            cmesh.edge( eid, v0, v1);
             add(v0);
             add(v1);
         }   // end for
@@ -104,10 +104,10 @@ struct VtxCounts
     {
         int v = -1;
 
-        const IntSet& cvtxs = _cmesh->cvtxs( hv);
+        const IntSet& cvtxs = _cmesh.cvtxs( hv);
         for ( int cv : cvtxs)
         {
-            const int eid = _cmesh->edgeId( hv, cv);
+            const int eid = _cmesh.edgeId( hv, cv);
             if ( cv != bhv && cv != rv && _vcounts.count(cv) > 0 && _edgeIds.count(eid) > 0 && _usedEdgeIds.count(eid) == 0)
             {
                 v = cv;
@@ -119,13 +119,13 @@ struct VtxCounts
         if ( v < 0)
         {
             // Done if head-->root is a valid edge of sufficient length and hasn't already been used
-            const int eid = _cmesh->edgeId( rv, hv);
+            const int eid = _cmesh.edgeId( rv, hv);
             if ( bhv != rv && _edgeIds.count(eid) > 0 && _usedEdgeIds.count(eid) == 0)
                 v = rv;
         }   // end if
 
         if ( v >= 0)
-            _usedEdgeIds.insert( _cmesh->edgeId( v, hv));   // Prevent this edge from being used again
+            _usedEdgeIds.insert( _cmesh.edgeId( v, hv));   // Prevent this edge from being used again
 
         return v;
     }   // end next
@@ -141,19 +141,19 @@ struct VtxCounts
 
     void printConnected( int bv, int v) const
     {
-        const IntSet& cvtxs = _cmesh->cvtxs( v);
+        const IntSet& cvtxs = _cmesh.cvtxs( v);
         for (int cv : cvtxs)
         {
             if ( cv == bv)  // Skip the vertex connected before v.
                 continue;
 
-            const int eid = _cmesh->edgeId( v, cv);
+            const int eid = _cmesh.edgeId( v, cv);
             if ( _edgeIds.count( eid) > 0)
             {
                 int cnt = 0;
                 if ( _vcounts.count(cv) > 0)
                     cnt = _vcounts.at(cv);
-                std::cerr << std::setw(6) << cv << " shares " << _cmesh->nsfaces(v, cv) << " polys [" << cnt << "]" << std::endl;
+                std::cerr << std::setw(6) << cv << " shares " << _cmesh.nsfaces(v, cv) << " polys [" << cnt << "]" << std::endl;
             }   // end if
         }   // end for
     }   // end printConnected
@@ -162,7 +162,7 @@ struct VtxCounts
 
 
 private:
-    const Mesh* _cmesh;
+    const Mesh &_cmesh;
     const IntSet& _edgeIds;
     IntSet _usedEdgeIds;
     std::unordered_map<int,int> _vcounts;
@@ -185,11 +185,10 @@ struct BoundaryPartials;
 
 struct Boundary
 {
-    Boundary( const Mesh* m, VtxCounts& vtxs)
+    explicit Boundary( VtxCounts& vtxs)
         : _vtxs(vtxs), _complete(false), _blist( new std::list<int>)
     {
-        const int v = vtxs.start(); // New boundary starting vertex
-        append(v);
+        append( vtxs.start()); // New boundary starting vertex
     }   // end ctor
 
     ~Boundary()
@@ -531,7 +530,7 @@ private:
 
 
 // public
-int Boundaries::sort( const Mesh* cmesh, const IntSet& eids)
+int Boundaries::sort( const Mesh &cmesh, const IntSet& eids)
 {
     _bnds.clear();
     if ( eids.empty())
@@ -545,7 +544,7 @@ int Boundaries::sort( const Mesh* cmesh, const IntSet& eids)
     Boundary* bnd = nullptr;
     while ( !vtxCounts.empty())
     {
-        bnd = new Boundary( cmesh, vtxCounts);
+        bnd = new Boundary( vtxCounts);
 
         int bv = -1;
         while ( !bnd->complete() && !vtxCounts.isMulti(bv))

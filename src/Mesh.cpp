@@ -1118,6 +1118,39 @@ const Edge *Mesh::commonEdge( int fid0, int fid1) const
 }   // end commonEdge
 
 
+namespace {
+
+bool otherSmallsInLarge( int notfid, const IntSet &smallSet, const IntSet &largeSet)
+{
+    for ( int fid : smallSet)
+        if ( fid != notfid && largeSet.count(fid) > 0)
+            return true;
+    return false;
+}   // end otherSmallsInLarge
+
+}   // end namespace
+
+
+IntSet Mesh::pseudoBoundaries( const IntSet &fids) const
+{
+    IntSet bset;
+    for ( int fid : fids)
+    {
+        const int *fvids = fvidxs(fid);
+
+        if ( !otherSmallsInLarge( fid, sfaces( fvids[0], fvids[1]), fids))
+            bset.insert( edgeId( fvids[0], fvids[1]));
+
+        if ( !otherSmallsInLarge( fid, sfaces( fvids[1], fvids[2]), fids))
+            bset.insert( edgeId( fvids[1], fvids[2]));
+
+        if ( !otherSmallsInLarge( fid, sfaces( fvids[2], fvids[0]), fids))
+            bset.insert( edgeId( fvids[2], fvids[0]));
+    }   // end for
+    return bset;
+}   // end pseudoBoundaries
+
+
 const IntSet &Mesh::sfaces( int vi, int vj) const
 {
     if ( !hasEdge(vi,vj))
@@ -1381,81 +1414,19 @@ bool Mesh::isVertexInsideFace( int fid, const Vec3f &fP) const
 }   // end isVertexInsideFace
 
 
-namespace {
-// Given unit base vector bv (from v) and p (from v), find w as the unit vector perpendicular
-// to bv and pointing to p, and return the perpendicular distance from p to the baseline (incident with bv).
-float calcBaseNorm( const Vec3f& bv, const Vec3f& p, Vec3f& w)
+Vec3f Mesh::toBarycentric( int fid, const Vec3f &p) const
 {
-    const Vec3f t = p.dot(bv)*bv;       // Point from p where triangle perpendicular meets base bv.
-    const float H = (t-p).norm();       // Height of the triangle
-    w = Vec3f::Zero();
-    if ( H > 0)
-        w = (p-t)/H;    // Unit vector points up from the base perpendicularly
-    return H;
-}   // end calcBaseNorm
-
-}   // end namespace
-
-
-Vec3f Mesh::toPropFromAbs( int fid, const Vec3f &vX) const
-{
-    const Vec3f vx = transform( _imat, vX);
-
     const int *vidxs = fvidxs(fid);
-    const Vec3f &v0 = uvtx( vidxs[0]);
-    const Vec3f &v1 = uvtx( vidxs[1]);
-    const Vec3f &v2 = uvtx( vidxs[2]);
-
-    const Vec3f vx0 = vx - v0;
-    const Vec3f v10 = v1 - v0;
-    const Vec3f v21 = v2 - v1;
-    const Vec3f v20 = v2 - v0;
-
-    const float nv10 = v10.norm();
-    const float nv21 = v21.norm();
-
-    Vec3f u = Vec3f::Zero();
-    if ( nv10 > 0.0f)
-        u = v10 / nv10;
-
-    Vec3f v = Vec3f::Zero();
-    if ( nv21 > 0.0f)
-       v = v21 / nv21;
-
-    const float theta = acosf( -u.dot(v));
-
-    Vec3f w;
-    const float H = calcBaseNorm( u, v20, w);
-
-    const float h = w.dot(vx0 - vx0.dot(u)*u); // Use dot product here to get sign of height (what side of triangle base)
-    // By similar triangles the edge parallel to v2v1 when shifted to be incident with vx makes angle theta with edge v1v0.
-    const float b = fabsf(theta) > 0 ? h/sinf(theta) : 0;
-    const float a = u.dot(vx0 - b*v); // Sign of b ensures that vx0 - b*v is always incident with base v0,v1
-
-    const float xprop = nv10 > 0 ? a/nv10 : 0;
-    const float yprop = nv21 > 0 ? b/nv21 : 0;
-
-    const Vec3f z = calcFaceNorm(fid);  // Unit length
-    const float A = H*nv10;             // This is twice the area of the triangle
-    const float zdist = z.dot(vx0);     // Projected distance off the triangle's surface in direction of normal
-    const float zprop = A > 0 ? zdist / sqrt(A) : 0; // sqrt because distance needs to scale linearly (obviously)
-    return transform( _tmat, Vec3f( xprop, yprop, zprop));
-}   // end toPropFromAbs
+    assert(vidxs);
+    return calcBarycentric( uvtx(vidxs[0]), uvtx(vidxs[1]), uvtx(vidxs[2]), p);
+}   // end toBaryCentric
 
 
-Vec3f Mesh::toAbsFromProp( int fid, const Vec3f &vp) const
+Vec3f Mesh::fromBarycentric( int fid, const Vec3f &b) const
 {
-    const Vec3f np = transform( _imat, vp);
     const int *vidxs = fvidxs(fid);
-    const Vec3f &v0 = uvtx( vidxs[0]);
-    const Vec3f &v1 = uvtx( vidxs[1]);
-    const Vec3f &v2 = uvtx( vidxs[2]);
-    Vec3f z = calcFaceVector( fid);
-    const float A = z.norm();
-    z.normalize();
-    const Vec3f fp = v0 + np[0]*(v1-v0) + np[1]*(v2-v1) + np[2]*sqrtf(A)*z;
-    return transform( _tmat, fp);
-}   // end toAbsFromProp
+    return b[0] * vtx(vidxs[0]) + b[1] * vtx(vidxs[1]) + b[2] * vtx(vidxs[2]);
+}   // end fromBarycentric
 
 
 bool Mesh::isEdgeVertex( int vidx, bool assume2DManifold) const

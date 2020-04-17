@@ -46,12 +46,10 @@ int DirectedSurfacePointFinder::find( Vec3f x, const Vec3f &u, Vec3f &y) const
         if ( vidx == lvidx) // Fail?
             break;
 
-        // Try to project into one of the connected faces of vidx.
-        // If we can, then we're done. If not, then the next x is
-        // set as a point further along from x in the direction of u
-        // by an amount equal to twice the largest distance from x to any
-        // vertex connected to vidx (including vidx) as long as the
-        // projection of that vertex from x is in the direction of u.
+        // Try to project into one of the connected faces of vidx. If we can, then we're done.
+        // If not, then the next delta to move x along u by is found as the maximum over the
+        // distance to vidx and the magnitudes of the vector projections from all of vertices
+        // connected to vidx with position x.
         for ( int fid : mesh.faces( vidx))
         {
             const Vec3f p = mesh.projectToFacePlane( fid, x);

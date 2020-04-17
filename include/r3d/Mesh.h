@@ -399,6 +399,13 @@ public:
     const Edge *commonEdge( int fid0, int fid1) const;
 
     /**
+     * Given a set of face IDs, return the "psuedo" boundary edge ID set which is comprised of the edges
+     * of faces in the given set where the adjacent faces of the edge are NOT in the given set. The returned
+     * set of edges should be sorted into different boundary lists before use (see r3d::Boundaries).
+     */
+    IntSet pseudoBoundaries( const IntSet &fids) const;
+
+    /**
      * Return the IDs of all edges with the given vertex in common.
      */
     inline const IntSet& edgeIds( int vid) const { return _v2e.at(vid);}
@@ -565,17 +572,14 @@ public:
     Vec3f nearestPositionWithinFace( int fid, const Vec3f&) const;
 
     /**
-     * For function toPropFromAbs, given a point relative to a face fid, return three scalars a, b, and c
-     * giving the proportions along edges v0-->v1, v1-->v2, and height off the face as a proportion of the
-     * square root of twice the triangle's area respectively. Position p can then be restored later relative
-     * to ANY face using toAbsFromProp as:
-     * p = v0 + a*(v1-v0) + b*(v2-v1) + c*sqrt(2A)*w,
-     * where A is the area of the restoring triangle face, and w is the unit vector normal to it.
-     * This works whether or not point p is inside the given face.
-     * The given points are considered transformed in accordance with this mesh's transform matrix.
+     * Calculate and return the barycentric coordinates of the given actual point within the given face.
      */
-    Vec3f toPropFromAbs( int fid, const Vec3f&) const;
-    Vec3f toAbsFromProp( int fid, const Vec3f&) const;
+    Vec3f toBarycentric( int fid, const Vec3f&) const;
+
+    /**
+     * Convert the barycentric coordinates with respect to the given face's vertices to an actual point.
+     */
+    Vec3f fromBarycentric( int fid, const Vec3f&) const;
 
     /**
      * Returns true iff given point *which must already be coplanar with the given triangle* is within it.

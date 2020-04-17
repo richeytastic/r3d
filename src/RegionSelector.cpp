@@ -59,7 +59,10 @@ size_t RegionSelector::setCentre( int svtx, const Vec3f& c)
     assert( svtx >= 0);
     assert( !_mesh.faces(svtx).empty());
     _cf = *_mesh.faces(svtx).begin();
-    _cval = _mesh.toPropFromAbs(_cf, c);
+    const int* fvidxs = _mesh.fvidxs(_cf);
+    _cval = calcBarycentric( _mesh.vtx(fvidxs[0]), _mesh.vtx(fvidxs[1]), _mesh.vtx(fvidxs[2]), c);
+
+    //_cval = _mesh.toPropFromAbs(_cf, c);
 
     _body.clear();
     _front->clear();
@@ -70,7 +73,12 @@ size_t RegionSelector::setCentre( int svtx, const Vec3f& c)
 
 Vec3f RegionSelector::centre() const
 {
-    return _mesh.toAbsFromProp( _cf, _cval);
+    const int* fvidxs = _mesh.fvidxs(_cf);
+    const Vec3f &a = _mesh.vtx(fvidxs[0]);
+    const Vec3f &b = _mesh.vtx(fvidxs[1]);
+    const Vec3f &c = _mesh.vtx(fvidxs[2]);
+    return _cval[0] * a + _cval[1] * b + _cval[2] * c;
+    //return _mesh.toAbsFromProp( _cf, _cval);
 }   // end centre
 
 

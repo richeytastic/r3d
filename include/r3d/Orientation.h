@@ -79,6 +79,7 @@ r3d_EXPORT PTree& operator<<( PTree&, const Orientation&);        // Orientation
 r3d_EXPORT const PTree& operator>>( const PTree&, Orientation&);  // Orientation reader from PTree
 
 r3d_EXPORT void putVertex( PTree&, const Vec3f&); // Creates keyed values "x", "y", and "z" in the provided record.
+r3d_EXPORT void addVertex( PTree&, const Vec3f&); // Appends keyed values "x", "y", and "z" in the provided record.
 
 r3d_EXPORT void putNamedVertex( PTree&, const std::string&, const Vec3f&); // Sets child node with given label to vertex.
 

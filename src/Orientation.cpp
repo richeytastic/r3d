@@ -73,6 +73,15 @@ void r3d::putVertex( PTree& node, const Vec3f& v)
     node.put( "z", v[2]);
 }   // end putVertex
 
+
+void r3d::addVertex( PTree& node, const Vec3f& v)
+{
+    node.add( "x", v[0]);
+    node.add( "y", v[1]);
+    node.add( "z", v[2]);
+}   // end addVertex
+
+
 void r3d::putNamedVertex( PTree& node, const std::string& label, const Vec3f& v)
 {
     putVertex( node.put( label, ""), v);

@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2019 Richard Palmer
+ * Copyright (C) 2020 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ public:
     virtual ~Boundaries();
 
     // Pass all edge pairs to be sorted into separate boundary lists.
-    int sort( const Mesh*, const IntSet& edgeIds);
+    int sort( const Mesh&, const IntSet& edgeIds);
 
     size_t count() const { return _bnds.size();}
 

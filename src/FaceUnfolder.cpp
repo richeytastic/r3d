@@ -52,7 +52,7 @@ FaceUnfolder::FaceUnfolder( const FaceUnfolder& unf, int T)
 Vec3f FaceUnfolder::calcUnfoldedPoint( int T, const Vec3f& p) const
 {
     assert( isFaceUnfolded(T));
-    const Vec3f pp = _mesh.toPropFromAbs( T, p);
+    const Vec3f pp = _mesh.toBarycentric( T, p);
     const int* vidxs = _mesh.fvidxs(T);
     const Vec3f& v0 = uvtx( vidxs[0]);
     const Vec3f& v1 = uvtx( vidxs[1]);
