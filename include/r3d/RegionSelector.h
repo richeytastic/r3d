@@ -37,6 +37,9 @@ public:
     using Ptr = std::shared_ptr<RegionSelector>;
     static Ptr create( const Mesh&, int vtx=-1);
 
+    // Return the mesh this region selector is for.
+    inline const Mesh& mesh() const { return _mesh;}
+
     // Adjust the radius of the selected region to grow or shrink in size maintaining the old centre.
     // Returns the number of vertices within the new region.
     size_t setRadius( float newRadiusThreshold);
