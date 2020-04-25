@@ -42,10 +42,16 @@ Boundaries& Boundaries::operator=( const Boundaries& ombb)
 
 Boundaries::~Boundaries()
 {
+    reset();
+}   // end dtor
+
+
+void Boundaries::reset()
+{
     for ( std::list<int>* d : _bnds)
         delete d;
     _bnds.clear();
-}   // end dtor
+}   // end reset
 
 
 namespace {
@@ -532,7 +538,7 @@ private:
 // public
 int Boundaries::sort( const Mesh &cmesh, const IntSet& eids)
 {
-    _bnds.clear();
+    reset();
     if ( eids.empty())
         return 0;
 

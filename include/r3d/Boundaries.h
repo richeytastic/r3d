@@ -31,8 +31,9 @@ public:
     Boundaries() = default;
     Boundaries( const Boundaries&);
     Boundaries& operator=( const Boundaries&);
-
     virtual ~Boundaries();
+
+    void reset();
 
     // Pass all edge pairs to be sorted into separate boundary lists.
     int sort( const Mesh&, const IntSet& edgeIds);
