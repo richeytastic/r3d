@@ -400,8 +400,9 @@ public:
 
     /**
      * Given a set of face IDs, return the "psuedo" boundary edge ID set which is comprised of the edges
-     * of faces in the given set where the adjacent faces of the edge are NOT in the given set. The returned
-     * set of edges should be sorted into different boundary lists before use (see r3d::Boundaries).
+     * of faces in the given set where the adjacent faces of the edge are NOT in the given set. Note that
+     * sorting the returned set of edges into different boundary lists will only work if the given set
+     * of faces is from a 2D manifold.
      */
     IntSet pseudoBoundaries( const IntSet &fids) const;
 

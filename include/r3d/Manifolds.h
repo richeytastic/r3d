@@ -77,11 +77,11 @@ public:
     inline const Mesh &mesh() const { return *_mesh;}
 
     // Returns the id of the manifold for the given face or -1 if not found.
-    int manifoldId( int fid) const;
+    int fromFaceId( int fid) const;
 
     // Returns manifold at position i. Manifolds are stored in descending order of # faces.
-    // By default, returns the largest (and maybe only) mesh manifold. Returns null if index out of range.
-    const Manifold* manifold( int i) const;
+    const Manifold& at( int i) const;
+    const Manifold& operator[]( int i) const;
 
     // Create and return a new mesh having only the top n manifolds (largest in terms of face count).
     // The returned mesh will only contain connected vertices that are part of the top n manifolds.
@@ -91,7 +91,7 @@ public:
 private:
     const Mesh *_mesh;
     std::vector<Manifold*> _manfs;
-    std::unordered_map<int, int> _face2manf;    // Facegon to manifold ID.
+    std::unordered_map<int, int> _face2manf;    // Face IDs to manifold IDs.
 
     Manifolds();
     explicit Manifolds( const Mesh&);

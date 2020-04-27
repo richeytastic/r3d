@@ -413,7 +413,7 @@ Manifolds& Manifolds::operator=( const Manifolds& m)
     const int n = int(m.count());
     _manfs.resize(n);
     for ( int i = 0; i < n; ++i)
-        _manfs[i] = new Manifold( *m.manifold(i));
+        _manfs[i] = new Manifold( m.at(i));
     _face2manf = m._face2manf;
     return *this;
 }   // end operator=
@@ -427,12 +427,17 @@ Manifolds::~Manifolds()
 }   // end dtor
 
 
-const Manifold* Manifolds::manifold( int i) const
+const Manifold& Manifolds::at( int i) const
 {
-    if ( i < 0 || i >= int(_manfs.size()))
-        return nullptr;
-    return _manfs.at(size_t(i));
-}   // end manifold
+    assert( i >= 0 && i < int(_manfs.size()));
+    return operator[](i);
+}   // end at
+
+
+const Manifold& Manifolds::operator[]( int i) const
+{
+    return *_manfs.at(size_t(i));
+}   // end operator[]
 
 
 // private
@@ -485,10 +490,10 @@ const Boundaries& Manifold::boundaries() const
 }   // end boundaries
 
 
-int Manifolds::manifoldId( int f) const
+int Manifolds::fromFaceId( int f) const
 {
     return _face2manf.count(f) > 0 ? _face2manf.at(f) : -1;
-}   // end manifoldId
+}   // end fromFaceId
 
 
 Mesh::Ptr Manifolds::reduceManifolds( int n) const
@@ -500,11 +505,11 @@ Mesh::Ptr Manifolds::reduceManifolds( int n) const
     n = std::max( 1, std::min( n, int(count())));
     for ( int i = 0; i < n; ++i)
     {
-        const Manifold* sman = manifold(i); // Source manifold on this object
+        const Manifold& sman = at(i); // Source manifold on this object
 
         // Add vertex remapped faces
         std::unordered_map<int,int> vvmap;  // Old to new vertices
-        for ( int fid : sman->_faces)
+        for ( int fid : sman._faces)
         {
             const Face& f = _mesh->face(fid);
             v0 = nmod->addVertex(_mesh->uvtx(f[0]));

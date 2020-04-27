@@ -141,8 +141,7 @@ struct VtxCounts
     // vertex count is still 2, then it was 3 prior to being appended!
     bool isMulti( int v) const { return _vcounts.count(v) > 0 && _vcounts.at(v) >= 2;}
     bool empty() const { return _vcounts.empty();}
-/*
-#ifndef NDEBUG
+//#ifndef NDEBUG
     int useCount( int v) const { return _vcounts.count(v) == 0 ? 0 : _vcounts.at(v);}
 
     void printConnected( int bv, int v) const
@@ -163,8 +162,7 @@ struct VtxCounts
             }   // end if
         }   // end for
     }   // end printConnected
-#endif
-*/
+//#endif
 
 
 private:
@@ -556,19 +554,17 @@ int Boundaries::sort( const Mesh &cmesh, const IntSet& eids)
         while ( !bnd->complete() && !vtxCounts.isMulti(bv))
         {
             bv = bnd->extendBoundary();
-/*
-#ifndef NDEBUG
+//#ifndef NDEBUG
             if ( bv < 0)
             {
-                std::cerr << " *** FAIL! ***" << std::endl;
-                std::cerr << "Available vertex connections to head " << bnd->head() << " in edge set:" << std::endl;
+                std::cerr << "[ERROR] r3d::Boundaries::sort:" << std::endl;
+                std::cerr << " - Available vertex connections to head " << bnd->head() << " in edge set:" << std::endl;
                 vtxCounts.printConnected( bnd->beforeHead(), bnd->head());
-                std::cerr << "Available vertex connections to root " << bnd->root() << " in edge set:" << std::endl;
+                std::cerr << " - Available vertex connections to root " << bnd->root() << " in edge set:" << std::endl;
                 vtxCounts.printConnected( bnd->beforeRoot(), bnd->root());
                 return -1;
             }   // end if
-#endif
-*/
+//#endif
             assert( bv != -1);
         }   // end while
 

@@ -24,51 +24,19 @@ using r3d::Vec3f;
 
 
 // public static
-RegionSelector::Ptr RegionSelector::create( const Mesh& mesh, int svtx)
+RegionSelector::Ptr RegionSelector::create( const Mesh& mesh)
 {
     assert( mesh.numFaces() > 0);
-
-    if ( svtx >= 0 && mesh.faces(svtx).empty())
-    {
-        std::cerr << "[ERROR] r3d::RegionSelector::create: "
-                  << "Cannot create a region selector from a vertex with no faces attached!" << std::endl;
-        return nullptr;
-    }   // end if
-
-    if ( svtx < 0)
-        svtx = (mesh.face( *mesh.faces().begin()))[0];    // First vertex of first face
-
-    return Ptr( new RegionSelector( mesh, svtx), [](RegionSelector* d){delete d;});
+    return Ptr( new RegionSelector( mesh), [](RegionSelector* d){delete d;});
 }   // end create
 
 
 // private
-RegionSelector::RegionSelector( const Mesh& mesh, int svtx)
-    : _mesh(mesh), _cval(0,0,0), _front( new IntSet), _rad(FLT_MAX)
-{
-    setCentre( svtx, mesh.vtx(svtx));
-}  // end ctor
+RegionSelector::RegionSelector( const Mesh& mesh) : _mesh(mesh), _cval(0,0,0), _front( new IntSet) {}
 
 
 // private
 RegionSelector::~RegionSelector() { delete _front;}
-
-
-size_t RegionSelector::setCentre( int svtx, const Vec3f& c)
-{
-    assert( svtx >= 0);
-    assert( !_mesh.faces(svtx).empty());
-    _cf = *_mesh.faces(svtx).begin();
-    const int* fvidxs = _mesh.fvidxs(_cf);
-    _cval = calcBarycentric( _mesh.vtx(fvidxs[0]), _mesh.vtx(fvidxs[1]), _mesh.vtx(fvidxs[2]), c);
-
-    //_cval = _mesh.toPropFromAbs(_cf, c);
-
-    _body.clear();
-    _front->clear();
-    _front->insert( svtx);
-    return setRadius( _rad);
-}   // end setCentre
 
 
 Vec3f RegionSelector::centre() const
@@ -109,8 +77,17 @@ int testMembership( int vidx, const Mesh& m, const Vec3f& ov, float R)
 
 
 // public
-size_t RegionSelector::setRadius( float nrad)
+size_t RegionSelector::update( int svtx, const Vec3f& c, float nrad)
 {
+    assert( svtx >= 0);
+    assert( !_mesh.faces(svtx).empty());
+    _cf = *_mesh.faces(svtx).begin();
+    const int* fvidxs = _mesh.fvidxs(_cf);
+    _cval = calcBarycentric( _mesh.vtx(fvidxs[0]), _mesh.vtx(fvidxs[1]), _mesh.vtx(fvidxs[2]), c);
+    _body.clear();
+    _front->clear();
+    _front->insert( svtx);
+
     nrad = std::max(0.0f, nrad);
     const float R = nrad < sqrtf( FLT_MAX) ? nrad*nrad : nrad;
     const Vec3f ov = centre();
@@ -137,7 +114,7 @@ size_t RegionSelector::setRadius( float nrad)
                     cfront.insert(cv);
                     nfront->insert(cv);
                 }   // end if
-            }   // end foreach
+            }   // end for
 
             // If the new front is now empty, the set radius was too small to retain even a single
             // seed vertex (which is necessary).
@@ -173,7 +150,7 @@ size_t RegionSelector::setRadius( float nrad)
                     cfront.insert(cv);
                     nfront->insert(cv);
                 }   // end if
-            }   // end foreach
+            }   // end for
         }   // end else
     }   // end while
 
@@ -182,7 +159,7 @@ size_t RegionSelector::setRadius( float nrad)
     _rad = nrad;
 
     return _front->size() + _body.size();
-}   // end setRadius
+}   // end update
 
 
 namespace {
@@ -211,38 +188,25 @@ int getNextVertexInSet( const Mesh& cmesh, const Vec3f& ov, const IntSet& fvidxs
 }   // end namespace
 
 
-// public
-size_t RegionSelector::boundary( std::list<int>& line) const
-{
-    line.clear();
-    if ( _front->empty())
-        return 0;
-
-    const Vec3f ov = centre();
-    IntSet fvidxs = *_front;    // Copy out the front vertices
-    int v = *fvidxs.begin();
-
-    while ( v >= 0)
-    {
-        line.push_back(v);
-        //std::cerr << line.size() << " / " << _front->size() << std::endl;
-        fvidxs.erase(v);
-        // Get the next vertex on the front that's connected to v that isn't already added
-        v = getNextVertexInSet( _mesh, ov, fvidxs, v);
-    }   // end while
-
-    return line.size();
-}   // end boundary
-
-
-// public
-size_t RegionSelector::selectedFaces( IntSet& cfids) const
+size_t RegionSelector::selectedFaces( IntSet& cfids, const IntSet *onlyIn) const
 {
     cfids.clear();
-    for ( int cv : _body)
+
+    if ( onlyIn)
     {
-        const IntSet& fcs = _mesh.faces(cv);
-        std::for_each(std::begin(fcs), std::end(fcs), [&](int x){cfids.insert(x);});
-    }   // end for
+        for ( int cv : _body)
+            for ( int fid : _mesh.faces(cv))
+                if ( onlyIn->count(fid) > 0)
+                    cfids.insert(fid);
+    }   // end if
+    else
+    {
+        for ( int cv : _body)
+        {
+            const IntSet& fcs = _mesh.faces(cv);
+            std::for_each(std::begin(fcs), std::end(fcs), [&](int x){cfids.insert(x);});
+        }   // end for
+    }   // end else
+
     return cfids.size();
 }   // end selectedFaces

@@ -43,8 +43,8 @@ bool FrontFinder::_updatePosAndNorm()
             _mpos += _fpos.at( fid);
             _mnrm += _fnrm.at( fid);
         }   // end for
-        _mpos /= n;
-        _mnrm /= n;
+        _mpos /= float(n);
+        _mnrm /= float(n);
     }   // end if
 
     return n > 0;
