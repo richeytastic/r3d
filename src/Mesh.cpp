@@ -42,7 +42,6 @@ using r3d::FaceMat;
 namespace {
 static const IntSet EMPTY_INT_SET;
 static const size_t HASH_NDP = 4;   // KEEP THIS AS 4!!!!
-static const float MATRIX_PRECISION = 1e-4f;
 }   // end namespace
 
 
@@ -182,18 +181,15 @@ void Mesh::addTransformMatrix( const Mat4f &tmat)
 
 void Mesh::fixTransformMatrix()
 {
-    if ( !hasFixedTransform())
-    {
-        for ( int vidx : _vids)
-            _vtxs[vidx] = vtx(vidx); // Ensures transform against existing matrix is done.
-        _imat = _tmat = Mat4f::Identity();  // NB not necessary to clear vertex cache _tvtxs
-    }   // end if
+    for ( int vidx : _vids)
+        _vtxs[vidx] = vtx(vidx); // Ensures transform against existing matrix is done.
+    _imat = _tmat = Mat4f::Identity();  // NB not necessary to clear vertex cache _tvtxs
 }   // end fixTransformMatrix
 
 
-bool Mesh::hasFixedTransform() const
+bool Mesh::hasFixedTransform( float precision) const
 {
-    return _tmat.isIdentity( MATRIX_PRECISION);
+    return _tmat.isIdentity( precision);
 }   // end hasFixedTransform
 
 

@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2019 Richard Palmer
+ * Copyright (C) 2020 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,8 +27,8 @@ using r3d::Vec3f;
 // public
 Slicer::Slicer( const Mesh& src) : _mesh(src)
 {
-    if ( src.transformMatrix() != Mat4f::Identity())
-        std::cerr << "[WARNING] r3d::Slicer::ctor: Sufplied mesh's transform is not identity!" << std::endl;
+    if ( !src.hasFixedTransform())
+        std::cerr << "[WARNING] r3d::Slicer::ctor: Mesh's transform is not fixed!" << std::endl;
 }   // end ctor
 
 
@@ -72,7 +72,7 @@ Mesh::Ptr Slicer::operator()( const Vec3f& p, const Vec3f& vec) const
             // should be rejected. If fp.inside() is false then the other two vertices are in the correct
             // half so the triangle is copied in. In some pathological cases, the triangle has zero area
             // and all vertices lie on the boundary. In such cases, the triangle can be rejected.
-            static const float EPS = 1e-6f;
+            static const float EPS = FLT_MIN;
             if ( (abi - aci).squaredNorm() < EPS)
             {
                 const float farea = mesh.calcFaceArea(fid);

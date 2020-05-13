@@ -162,32 +162,6 @@ size_t RegionSelector::update( int svtx, const Vec3f& c, float nrad)
 }   // end update
 
 
-namespace {
-
-// Gets the next vertex in the set that's connected to v AND is most distant from ov.
-int getNextVertexInSet( const Mesh& cmesh, const Vec3f& ov, const IntSet& fvidxs, int v)
-{
-    const IntSet& cvs = cmesh.cvtxs(v);
-    v = -1;
-    float maxd = 0;
-    for ( int cv : cvs)
-    {
-        if ( fvidxs.count(cv) > 0)
-        {
-            const float rval = (cmesh.vtx(cv) - ov).squaredNorm();
-            if ( rval > maxd)
-            {
-                v = cv;
-                maxd = rval;
-            }   // end if
-        }   // end if
-    }   // end for
-    return v;
-}   // end getNextVertexInSet
-
-}   // end namespace
-
-
 size_t RegionSelector::selectedFaces( IntSet& cfids, const IntSet *onlyIn) const
 {
     cfids.clear();

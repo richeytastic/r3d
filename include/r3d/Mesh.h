@@ -134,7 +134,7 @@ public:
      * Returns true iff this mesh's transform matrix has been fixed (is the identity matrix) so that its
      * raw and transformed vertices are the same (i.e. the return value for uvtx(i) == vtx(i) forall i).
      */
-    bool hasFixedTransform() const;
+    bool hasFixedTransform( float precision=1e-4f) const;
 
 
     /********************************************************************************************************************/
