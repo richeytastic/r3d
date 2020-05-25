@@ -31,7 +31,7 @@ public:
     void reflect( const Vec3f& point, const Vec3f& planev);
 
     // Reflect an arbitrary point through the given plane defined by point and plane vector.
-    // NB planev MUST BE NORMALIZED before calling this function!
+    // NB planeVector MUST BE NORMALIZED before calling this function!
     static Vec3f reflectPoint( const Vec3f &toReflect, const Vec3f &planePoint, const Vec3f& planeVector);
 
 private:

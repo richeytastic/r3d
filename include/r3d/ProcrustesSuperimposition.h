@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2019 Richard Palmer
+ * Copyright (C) 2020 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,6 +38,7 @@ public:
 
 private:
     const VecXf &_W;        // Vertex weights.
+    const float _wsum;      // Sum of weights
     bool _scaleUp;          // Whether or not to scale transformed mesh up to the target dimensions.
     Vec3f _vbar;            // The centroid of A.
     MatX3f _A;              // Mesh vertices as row vectors.

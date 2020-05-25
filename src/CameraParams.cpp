@@ -55,7 +55,7 @@ void CameraParams::setPositionFromFocus( float r, const Vec3f* newfocus)
         _foc = *newfocus;
     Vec3f dirVec = _pos - _foc;
     dirVec.normalize();
-    _pos = float(r)*dirVec + _foc;
+    _pos = r*dirVec + _foc;
 }   // end setPositionFromFocus
 
 

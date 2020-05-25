@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2019 Richard Palmer
+ * Copyright (C) 2020 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,74 +20,38 @@
 #include <cassert>
 using r3d::ProcrustesSuperimposition;
 using r3d::VecXf;
-using r3d::Vec3f;
-using r3d::Mat4f;
 using r3d::Mat4f;
 using r3d::MatX3f;
 
-namespace {
 
-Vec3f calcWeightedMean( const MatX3f &vrows, const VecXf &w)
+ProcrustesSuperimposition::ProcrustesSuperimposition( const MatX3f& vrows, const VecXf& w, bool scaleUp)
+    : _W(w), _wsum(w.sum()), _scaleUp(scaleUp)
 {
-    const size_t N = vrows.rows();
-    assert( N == size_t(w.size()));
-    Vec3f vbar = Vec3f::Zero();
-    for ( size_t i = 0; i < N; ++i)
-        vbar += w[i] * vrows.row(i);
-    return vbar / N;
-}   // end calcWeightedMean
-
-
-float centreAndScale( MatX3f &outRows, const MatX3f &vrows, const VecXf &w, const Vec3f &vbar)
-{
-    const size_t N = vrows.rows();
-    assert( N == size_t(w.size()));
-    outRows = MatX3f( N, 3);
-    float s = 0.0f;
-    for ( size_t i = 0; i < N; ++i)
-    {
-        outRows.row(i) = (Vec3f)vrows.row(i) - vbar; // Centre the distribution
-        s += (w[i] * outRows.row(i)).squaredNorm(); // Weighted scaling
-    }   // end for
-    s = sqrtf( s/N);    // Scale factor
-    outRows /= s;       // Normalise range
-    return s;
-}   // end centreAndScale
-
-}   // end namespace
-
-
-ProcrustesSuperimposition::ProcrustesSuperimposition( const MatX3f& vrows, const VecXf& vw, bool scaleUp)
-    : _W(vw), _scaleUp(scaleUp)
-{
-    _vbar = calcWeightedMean( vrows, vw); // Calculate weighted mean (how much each point matters in the distribution)
-    _s = centreAndScale( _A, vrows, vw, _vbar);
+    assert( vrows.rows() == w.rows());
+    const MatX3f wvs = vrows.array().colwise() * w.array(); // N rows x 3 cols
+    _vbar = wvs.colwise().sum() / _wsum;
+    const MatX3f A = vrows.rowwise() - _vbar.transpose();
+    _s = wvs.rowwise().norm().sum() / _wsum;
+    _A = (A.array().colwise() * w.array()) / _s;    // Note weighing of A again here for covariance matrix
 }   // end ctor
 
 
 Mat4f ProcrustesSuperimposition::operator()( const MatX3f& inB) const
 {
-    const Vec3f vbar = calcWeightedMean( inB, _W);
-    MatX3f B;
-    const float sB = centreAndScale( B, inB, _W, vbar);
+    const MatX3f wvs = inB.array().colwise() * _W.array();
+    const Vec3f vbar = wvs.colwise().sum() / _wsum;
+    MatX3f B = inB.rowwise() - vbar.transpose();
+    const float sB = wvs.rowwise().norm().sum() / _wsum;
+    B /= sB;
 
-    // Weight the rows of B
-    const size_t N = inB.rows();
-    for ( size_t i = 0; i < N; ++i)
-        B.row(i) *= _W[i];
-
-    // Compute the covariance between B and A (not normalised?)
-    const Mat3f C = B.transpose() * _A;
-
+    const Mat3f C = _A.transpose() * B; // Covariance between B and A
     Eigen::JacobiSVD<Mat3f> svd( C, Eigen::ComputeFullU | Eigen::ComputeFullV);
 
     Mat4f t0 = Mat4f::Identity();
     const float scaleFactor = _scaleUp ? _s/sB : 1.0f;
-    t0.block<3,3>(0,0) = (svd.matrixV().transpose() * svd.matrixU().transpose()) * scaleFactor;   // 3x3 rotation matrix with scaling
-    t0.block<3,1>(0,3) = _vbar;
-
+    t0.block<3,3>(0,0) = (svd.matrixV() * svd.matrixU().transpose()) * scaleFactor;   // 3x3 rotation matrix with scaling
+    t0.block<3,1>(0,3) = vbar;
     Mat4f t1 = Mat4f::Identity();
-    t1.block<3,1>(0,3) = -vbar;
-
+    t1.block<3,1>(0,3) = -_vbar;
     return t0 * t1;
 }   // end operator()

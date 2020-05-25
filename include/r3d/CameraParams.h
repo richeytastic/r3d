@@ -64,7 +64,7 @@ public:
 
     // Reposition the camera r units from the focus (or a new focus if given)
     // along the line between the existing camera position and the focus.
-    void setPositionFromFocus( float r, const Vec3f* newFocus=NULL);
+    void setPositionFromFocus( float r, const Vec3f* newFocus=nullptr);
 
     // Project t's location onto the view plane as x,y proportional coordinates from the top left.
     cv::Point2f project( const Vec3f& t) const;

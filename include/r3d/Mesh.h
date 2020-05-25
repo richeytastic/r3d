@@ -574,11 +574,13 @@ public:
 
     /**
      * Calculate and return the barycentric coordinates of the given actual point within the given face.
+     * Note that the returned coordinates depends upon the ordering of the vertices in the given face.
      */
     Vec3f toBarycentric( int fid, const Vec3f&) const;
 
     /**
      * Convert the barycentric coordinates with respect to the given face's vertices to an actual point.
+     * Note that the coordinates are applied to the face's vertices in the order they are stored.
      */
     Vec3f fromBarycentric( int fid, const Vec3f&) const;
 
