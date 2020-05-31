@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2019 Richard Palmer
+ * Copyright (C) 2020 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,10 +32,13 @@ class r3d_EXPORT Curvature
 {
 public:
     using Ptr = std::shared_ptr<Curvature>;
-    static Ptr create( Mesh&);
-    Curvature( Mesh&);
+    static Ptr create( const Mesh&);
+    explicit Curvature( const Mesh&);
 
-    inline const Mesh &mesh() const { return _mesh;}
+    inline const Mesh &mesh() const { return *_mesh;}
+
+    // Remember to reset the mesh after a sequence of calls to adjustRawVertex below.
+    void setMesh( const Mesh &m) { _mesh = &m;}
 
     // Get the principal curvature vectors tangent to the surface at vertex vi.
     // On return, kp1 and kp2 are set to the corresponding curvature metrics.
@@ -53,13 +56,18 @@ public:
     // Return the full matrix of vertex normals (untransformed vertices).
     inline const MatX3f &vertexNormals() const { return _vtxNormals;}
 
-    // Adjust the raw position of a single vertex on the mesh and also update its curvature
-    // (along with the curvature of all connected vertices as well).
+    // Adjust the raw position of a single vertex on the given mesh and also update its curvature
+    // (along with the curvature of all connected vertices as well). The given mesh can be a
+    // different object from the original mesh used to construct this Curvature object but if
+    // different, it must be a straight copy (since the same vertex indices etc are used).
+    // If different, setMesh should be called either before or after this function is used to
+    // ensure that this object has a consistent reference to the mesh it is built from.
+    //
     // This function is provided only for making iterative adjustments to vertex positions
     // where the resulting modified curvature needs to be reparsed (e.g. for smoothing).
     // If iterative curvature changes on single vertices are not needed, it is more
     // efficient to create this object again from scratch after making mesh wide changes.
-    void adjustRawVertex( int vidx, const Vec3f&);
+    void adjustRawVertex( Mesh&, int vidx, const Vec3f&);
 
     /*****************************************************************************************/
 
@@ -75,15 +83,15 @@ public:
     static float calcGivensRotation( float a, float b, float& c, float& s);
 
 private:
-    Mesh &_mesh;            // Mesh reference
+    const Mesh *_mesh;
     MatX3f _vtxNormals;     // Normals at vertices
     VecXf _edgeFaceSums;    // Sum of face areas with rows as edge ID
     VecXf _vtxAdjFacesSum;  // Sum of face areas with rows as vertex ID
     Eigen::Matrix<float, Eigen::Dynamic, 8> _vtxCurvature;  // Per vertex (rows) curvature
 
-    void _updateFace( int, float);
-    void _setVertexCurvature( int);
-    void _addEdgeCurvature( int, int, Mat3f&) const;
+    void _updateFace( const Mesh&, int, float);
+    void _setVertexCurvature( const Mesh&, int);
+    void _addEdgeCurvature( const Mesh&, int, int, Mat3f&) const;
 };  // end class
 
 }   // end namespace

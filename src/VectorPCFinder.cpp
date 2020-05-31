@@ -102,3 +102,19 @@ Mat3f VectorPCFinder::eigenVectors2RotationMatrix( const Mat3f &evs)
     T.block<3,1>(0,2) = zvec;
     return T;
 }   // end eigenVectors2RotationMatrix
+
+
+// static
+Mat3f VectorPCFinder::estimateRotationMatrix( const r3d::Mesh &mesh, const IntSet &vids)
+{
+    MatX3f frows( vids.size(), 3);
+    int i = 0;
+    Vec3f mpos = Vec3f::Zero();
+    for ( int vid : vids)
+        mpos += mesh.vtx(vid);
+    mpos /= vids.size();
+    for ( int vid : vids)
+        frows.row(i++) = mesh.vtx( vid) - mpos;
+    const Mat3f E = VectorPCFinder(frows).eigenVectors(); // Find the eigen vectors
+    return eigenVectors2RotationMatrix( E);
+}   // end estimateRotationMatrix

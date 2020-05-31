@@ -20,6 +20,10 @@
 
 #include "r3dTypes.h"
 
+#ifdef _WIN32
+#pragma warning( disable : 4251)
+#endif
+
 namespace r3d {
 
 // Use Procrustes to fit a set of vertices to a target. There must be a one-to-one correspondence

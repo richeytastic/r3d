@@ -74,7 +74,6 @@ public:
         return _kdtree->radiusSearch( &q[0], radius, matches, params);
     }   // end findr
 
-
 private:
     const MeshPoints<float> _pcloud;
     NanoKDTree *_kdtree;
@@ -89,6 +88,7 @@ KDTree::KDTree( const Mesh& mesh) : _mesh(mesh), _impl( new Impl(mesh)) {}
 
 // private
 KDTree::~KDTree() { delete _impl;}
+
 
 int KDTree::find( const Vec3f &p, float* sqdis) const
 {

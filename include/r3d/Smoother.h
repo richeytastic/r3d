@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2019 Richard Palmer
+ * Copyright (C) 2020 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,11 @@ public:
     explicit Smoother( float maxc, size_t maxIterations=10);
  
     // If vidxs is given, only vertices in the given set are looked at.
-    void operator()( Curvature&, const IntSet *vidxs=nullptr);
+    // On return the internal reference of the provided Curvature object
+    // will be the given mesh object. Note that the given mesh object and
+    // the mesh that the Curvature object was created from must be the same
+    // (though not necessarily the same object in memory).
+    void operator()( Mesh&, Curvature&, const IntSet *vidxs=nullptr);
 
 private:
     const float _maxc;

@@ -68,13 +68,13 @@ template <typename T>
 class MeshPoints
 {
 public:
-    MeshPoints( const Mesh& m) : _m(m) {}
+    MeshPoints( const Mesh &m) : _m(m) {}
     inline size_t kdtree_get_point_count() const { return _m.numVtxs();}
     inline T kdtree_get_pt( const size_t i, int d) const { return _m.uvtx((int)i)[d];}
     template <class BBOX>
     inline bool kdtree_get_bbox( BBOX&) const { return false;}
 private:
-    const Mesh& _m;
+    const Mesh &_m;
 };  // end class
 
 }   // end namespace

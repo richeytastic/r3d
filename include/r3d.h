@@ -23,6 +23,7 @@
 #include "r3d/Boundaries.h"
 #include "r3d/Bounds.h"
 #include "r3d/CameraParams.h"
+#include "r3d/Colour.h"
 #include "r3d/Copier.h"
 #include "r3d/Curvature.h"
 #include "r3d/CurvatureMetrics.h"

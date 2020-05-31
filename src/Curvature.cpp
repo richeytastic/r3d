@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2019 Richard Palmer
+ * Copyright (C) 2020 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,21 +59,21 @@ Vec3f Curvature::calcVertexNormal( const Mesh& m, int vidx)
 
 
 // public static
-Curvature::Ptr Curvature::create( Mesh& m)
+Curvature::Ptr Curvature::create( const Mesh& m)
 {
     return Ptr( new Curvature(m), [](Curvature* x){delete x;});
 }   // end create
 
 
-void Curvature::_updateFace( int fid, float mult)
+void Curvature::_updateFace( const r3d::Mesh &mesh, int fid, float mult)
 {
-    const int *fvidxs = _mesh.fvidxs(fid);
+    const int *fvidxs = mesh.fvidxs(fid);
     const int a = fvidxs[0];
     const int b = fvidxs[1];
     const int c = fvidxs[2];
-    const Vec3f& vA( _mesh.uvtx(a));
-    const Vec3f& vB( _mesh.uvtx(b));
-    const Vec3f& vC( _mesh.uvtx(c));
+    const Vec3f& vA( mesh.uvtx(a));
+    const Vec3f& vB( mesh.uvtx(b));
+    const Vec3f& vC( mesh.uvtx(c));
 
     const Vec3f fnrm = mult * (vB-vA).cross(vC-vB);    // Magnitude is twice area of triangle
 
@@ -83,9 +83,9 @@ void Curvature::_updateFace( int fid, float mult)
 
     const float A = mult * fnrm.norm() / 2; // Triangle area
 
-    _edgeFaceSums[_mesh.edgeId(a, b)] += A;
-    _edgeFaceSums[_mesh.edgeId(b, c)] += A;
-    _edgeFaceSums[_mesh.edgeId(c, a)] += A;
+    _edgeFaceSums[mesh.edgeId(a, b)] += A;
+    _edgeFaceSums[mesh.edgeId(b, c)] += A;
+    _edgeFaceSums[mesh.edgeId(c, a)] += A;
 
     _vtxAdjFacesSum[a] += A;
     _vtxAdjFacesSum[b] += A;
@@ -93,19 +93,19 @@ void Curvature::_updateFace( int fid, float mult)
 }   // end _updateFace
 
 
-Curvature::Curvature( Mesh &m)
-    : _mesh(m),
-      _vtxNormals( MatX3f::Zero( m.numVtxs(), 3)),
-      _edgeFaceSums( VecXf::Zero( m.numEdges())),
-      _vtxAdjFacesSum( VecXf::Zero( m.numVtxs())),
-      _vtxCurvature( m.numVtxs(), 8)
+Curvature::Curvature( const Mesh &mesh)
+    : _mesh( &mesh),
+      _vtxNormals( MatX3f::Zero( mesh.numVtxs(), 3)),
+      _edgeFaceSums( VecXf::Zero( mesh.numEdges())),
+      _vtxAdjFacesSum( VecXf::Zero( mesh.numVtxs())),
+      _vtxCurvature( mesh.numVtxs(), 8)
 {
-    assert( m.hasSequentialIds());
-    const int NV = int(m.numVtxs());
-    const int NF = int(m.numFaces());
+    assert( mesh.hasSequentialIds());
+    const int NV = int(mesh.numVtxs());
+    const int NF = int(mesh.numFaces());
 
     for ( int fid = 0; fid < NF; ++fid)
-        _updateFace( fid, 1.0f);
+        _updateFace( mesh, fid, 1.0f);
 
     // Normalise vertex norms
     for ( int i = 0; i < NV; ++i)
@@ -113,26 +113,26 @@ Curvature::Curvature( Mesh &m)
 
     // Set curvature
     for ( int i = 0; i < NV; ++i)
-        _setVertexCurvature( i);
+        _setVertexCurvature( mesh, i);
 }   // end ctor
 
 
-void Curvature::adjustRawVertex( int vidx, const Vec3f &npos)
+void Curvature::adjustRawVertex( Mesh &mesh, int vidx, const Vec3f &npos)
 {
-    const IntSet &fids = _mesh.faces(vidx);     // Associated polys
+    const IntSet &fids = mesh.faces(vidx);     // Associated polys
 
     // Remove the old values from associated vertices and faces
     for ( int fid : fids)
-        _updateFace( fid, -1.0f);
+        _updateFace( mesh, fid, -1.0f);
 
     // Update the vertex's raw (untransformed) position
-    _mesh.adjustRawVertex( vidx, npos);
+    mesh.adjustRawVertex( vidx, npos);
 
     // Add back in new values for the associated vertices and faces
     for ( int fid : fids)
-        _updateFace( fid, 1.0f);
+        _updateFace( mesh, fid, 1.0f);
 
-    const IntSet &cvtxs = _mesh.cvtxs(vidx);    // Connected vertices
+    const IntSet &cvtxs = mesh.cvtxs(vidx);    // Connected vertices
 
     // Normalise vertex norms
     _vtxNormals.row(vidx).normalize();
@@ -140,18 +140,18 @@ void Curvature::adjustRawVertex( int vidx, const Vec3f &npos)
         _vtxNormals.row(i).normalize();
 
     // Set curvature
-    _setVertexCurvature( vidx);
+    _setVertexCurvature( mesh, vidx);
     for ( int i : cvtxs)
-        _setVertexCurvature( i);
+        _setVertexCurvature( mesh, i);
 }   // end adjustRawVertex
 
 
-void Curvature::_setVertexCurvature( int vi)
+void Curvature::_setVertexCurvature( const Mesh &mesh, int vi)
 {
     Mat3f M = Mat3f::Zero();
-    const IntSet &cvtxs = _mesh.cvtxs(vi);
+    const IntSet &cvtxs = mesh.cvtxs(vi);
     for ( int vj : cvtxs)
-        _addEdgeCurvature( vi, vj, M);
+        _addEdgeCurvature( mesh, vi, vj, M);
 
     const Vec3f &N = _vtxNormals.row(vi);
     Vec3f W(1,0,0);
@@ -181,11 +181,11 @@ void Curvature::_setVertexCurvature( int vi)
 }   // end _setVertexCurvature
 
 
-void Curvature::_addEdgeCurvature( int vi, int vj, Mat3f &M) const
+void Curvature::_addEdgeCurvature( const Mesh &mesh, int vi, int vj, Mat3f &M) const
 {
     const Vec3f &N = _vtxNormals.row(vi);   // Normal to the surface at vi
-    const Vec3f &ui = _mesh.uvtx(vi);
-    const Vec3f &uj = _mesh.uvtx(vj);
+    const Vec3f &ui = mesh.uvtx(vi);
+    const Vec3f &uj = mesh.uvtx(vj);
     Vec3f uji = uj - ui;
 
     Vec3f Tij = (Eigen::Matrix3f::Identity() - N*N.transpose()) * -uji; // Tij is the unit vector in the tangent plane to the surface at point vi
@@ -195,7 +195,7 @@ void Curvature::_addEdgeCurvature( int vi, int vj, Mat3f &M) const
     const float k = 2.0f * N.dot(uji); // Approximate the directional curvature 
 
     // Calc edge weight ensuring that sum of the edge weights for all vertices connected to vi == 1
-    const float w = _edgeFaceSums[_mesh.edgeId(vi,vj)] / _vtxAdjFacesSum[vi];
+    const float w = _edgeFaceSums[mesh.edgeId(vi,vj)] / _vtxAdjFacesSum[vi];
 
     M += w * k * Tij * Tij.transpose(); // Add the weighted curvature matrix
 }   // end _addEdgeCurvature

@@ -124,10 +124,12 @@ Vec3f calcAdjustedVertex( const Mesh &m, int vidx)
 }   // end namespace
 
 
-void Smoother::operator()( Curvature& cmap, const IntSet *subset)
+void Smoother::operator()( Mesh &mesh, Curvature& cmap, const IntSet *subset)
 {
     if ( !subset)   // If subset not given, look at all vertices on the mesh.
-        subset = &cmap.mesh().vtxIds();
+        subset = &mesh.vtxIds();
+
+    cmap.setMesh(mesh);
 
     IntSet hcset;   // Vertices with curvature more than the allowed max
     for ( int vid : *subset)
@@ -146,11 +148,11 @@ void Smoother::operator()( Curvature& cmap, const IntSet *subset)
         while ( !heap.empty())
         {
             const int vidx = popHeap( heap, vcmap, hcset);  // vidx inserted into hcset and removed from vcmap.
-            const Vec3f npos = calcAdjustedVertex( cmap.mesh(), vidx);   // Repositioned as mean of connected vertices.
-            cmap.adjustRawVertex( vidx, npos);                // Update curvature at the vertex (and vertices connected to it).
+            const Vec3f npos = calcAdjustedVertex( mesh, vidx);   // Repositioned as mean of connected vertices.
+            cmap.adjustRawVertex( mesh, vidx, npos);              // Update curvature at the vertex (and vertices connected to it).
 
             // Parse the connected vertices of the newly adjusted vertex since their curvature will have changed.
-            for ( int cv : cmap.mesh().cvtxs(vidx))
+            for ( int cv : mesh.cvtxs(vidx))
             {
                 // Don't add vertices parsed while heap not empty; only add previously identified surface vertices,
                 // and don't add any vertices with curvature <= _maxc.

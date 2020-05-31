@@ -18,7 +18,7 @@
 #ifndef R3D_VECTOR_PC_FINDER_H
 #define R3D_VECTOR_PC_FINDER_H
 
-#include "r3dTypes.h"
+#include "Mesh.h"
 
 #ifdef _WIN32
 #pragma warning( disable : 4251)
@@ -29,22 +29,34 @@ namespace r3d {
 class r3d_EXPORT VectorPCFinder
 {
 public:
-    // Solved on instantiation.
+    /**
+     * Solved on instantiation.
+     */
     explicit VectorPCFinder( const MatX3f& verts);
 
-    // Return's eigen vectors of the vertex distribution as column vectors.
-    // The eigenvectors are sorted in descending order by eigenvalue magnitude.
+    /**
+     * Return's eigen vectors of the vertex distribution as column vectors.
+     * The eigenvectors are sorted in descending order by eigenvalue magnitude.
+     */
     inline const Mat3f &eigenVectors() const { return _evecs;}
     inline const Vec3f &eigenValues() const { return _evals;}
 
-    // Take eigen vectors and create a rotation matrix by reordering
-    // them to be stored with the eigen vector having the largest
-    // coefficient in the first position in the first column, the
-    // one with the largest coefficient in the second position to
-    // be in the second column and the other one in the third column.
-    // In addition, the vector directions are swapped if dot products
-    // are negative with the canonical X,Y,and Z axes.
+    /**
+     * Take eigen vectors and create a rotation matrix by reordering
+     * them to be stored with the eigen vector having the largest
+     * coefficient in the first position in the first column, the
+     * one with the largest coefficient in the second position to
+     * be in the second column and the other one in the third column.
+     * In addition, the vector directions are swapped if dot products
+     * are negative with the canonical X,Y,and Z axes.
+     */
     static Mat3f eigenVectors2RotationMatrix( const Mat3f&);
+
+    /**
+     * Estimate and return the rotation matrix for the given model
+     * using only the given subset of vertices.
+     */
+    static Mat3f estimateRotationMatrix( const Mesh&, const IntSet &vids);
 
 private:
     Mat3f _evecs;

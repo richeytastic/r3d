@@ -413,7 +413,10 @@ Manifolds& Manifolds::operator=( const Manifolds& m)
     const int n = int(m.count());
     _manfs.resize(n);
     for ( int i = 0; i < n; ++i)
+    {
         _manfs[i] = new Manifold( m.at(i));
+        _manfs[i]->_mesh = _mesh;
+    }   // end for
     _face2manf = m._face2manf;
     return *this;
 }   // end operator=
@@ -425,6 +428,14 @@ Manifolds::~Manifolds()
     for ( Manifold* m : _manfs)
         delete m;
 }   // end dtor
+
+
+void Manifolds::setMesh( const Mesh &mesh)
+{
+    _mesh = &mesh;
+    for ( Manifold *m : _manfs)
+        m->_mesh = _mesh;
+}   // end setMesh
 
 
 const Manifold& Manifolds::at( int i) const

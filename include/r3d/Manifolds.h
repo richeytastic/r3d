@@ -76,6 +76,10 @@ public:
 
     inline const Mesh &mesh() const { return *_mesh;}
 
+    // Replace internal mesh with the given one. Does not reparse anything so the
+    // provided mesh should be a deep copy of the original (in terms of connectivity).
+    void setMesh( const Mesh&);
+
     // Returns the id of the manifold for the given face or -1 if not found.
     int fromFaceId( int fid) const;
 
