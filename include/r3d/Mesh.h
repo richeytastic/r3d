@@ -200,6 +200,11 @@ public:
     bool adjustRawVertex( int vidx, float x, float y, float z);
 
     /**
+     * Swap the positions of the two vertices.
+     */
+    void swapVertexPositions( int vidx0, int vidx1);
+
+    /**
      * Multiply the component of each vertex by sfactor.
      */
     bool scaleVertex( int vidx, float sfactor);
@@ -299,6 +304,11 @@ public:
      * remains correctly associated (matched to the face's vertices).
      */
     void reverseFaceVertices( int id);
+
+    /**
+     * Invert normals globally (calls reverseFaceVertices for every face).
+     */
+    void invertNormals();
 
     /**
      * Given the ordering of vertices on the face, calculate and return the face's unit normal.

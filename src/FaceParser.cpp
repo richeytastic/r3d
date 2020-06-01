@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2019 Richard Palmer
+ * Copyright (C) 2020 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,13 +22,10 @@
 using r3d::FaceParser;
 using r3d::BoundaryParser;
 using r3d::TriangleParser;
-using r3d::Mesh;
-using r3d::Face;
-using r3d::Vec3f;
 using r3d::Vec3i;
 using r3d::Vec2i;
 
-FaceParser::FaceParser( const Mesh& m) : _mesh(m), _twisted(false), _bparser(nullptr) {}
+FaceParser::FaceParser( const r3d::Mesh& m) : _mesh(m), _twisted(false), _bparser(nullptr) {}
 
 FaceParser::~FaceParser() {}
 
@@ -61,50 +58,56 @@ bool FaceParser::addTriangleParser( TriangleParser* tp)
 
 struct FaceParser::Triangle
 {
-    Triangle( FaceParser* parser, int f, Vec2i e)
-        : _parser(parser), fid(f), nfid(-1), vtxs( e[0], e[1], parser->mesh().face(f).opposite( e[0], e[1]))
+    Triangle( FaceParser* parser, int f, const Vec3i& v) : _parser(parser), _fid(f), _nfid(-1), _vtxs(v)
     {
-        parser->_parsed.insert(fid);
-        parser->_processTriangleParsers( fid, vtxs);
+        parser->_parsed.insert( _fid);
+        parser->_processTriangleParsers( _fid, _vtxs);
     }   // end ctor
 
-    int id() const { return fid;}
+    int id() const { return _fid;}
 
     // Triangle on edge opposite root vertex
-    bool canTop() { return findNext( topEdge());}
-    Triangle* goTop() { return new Triangle( _parser, nfid, topEdge());}
+    bool canTop() { return _findNext( Vec2i( _vtxs[2], _vtxs[1]));}
+    Triangle* goTop() const
+    {
+        return new Triangle( _parser, _nfid, Vec3i( _parser->mesh().face(_nfid).opposite( _vtxs[2], _vtxs[1]), _vtxs[2], _vtxs[1]));
+    }   // end goTop
 
     // Triangle adjacent to edge opposite vertex a
-    bool canLeft() { return findNext( leftEdge());}
-    Triangle* goLeft() { return new Triangle( _parser, nfid, leftEdge());}
+    bool canLeft() { return _findNext( Vec2i( _vtxs[2], _vtxs[0]));}
+    Triangle* goLeft() const
+    {
+        return new Triangle( _parser, _nfid, Vec3i( _vtxs[2], _parser->mesh().face(_nfid).opposite( _vtxs[2], _vtxs[0]), _vtxs[0]));
+    }   // end goLeft
 
     // Triangle adjacent to edge opposite vertex b
-    bool canRight() { return findNext( rightEdge());}
-    Triangle* goRight() { return new Triangle( _parser, nfid, rightEdge());}
-
-    bool isTwisted( const std::unordered_map<int, Triangle*>* alltgl) const
+    bool canRight() { return _findNext( Vec2i( _vtxs[1], _vtxs[0]));}
+    Triangle* goRight() const
     {
-        return isEdgeTwisted( alltgl, topEdge()) ||
-               isEdgeTwisted( alltgl, leftEdge()) ||
-               isEdgeTwisted( alltgl, rightEdge());
+        return new Triangle( _parser, _nfid, Vec3i( _vtxs[1], _vtxs[0], _parser->mesh().face(_nfid).opposite( _vtxs[1], _vtxs[0])));
+    }   // end goRight
+
+    bool isTwisted( const std::unordered_map<int, Triangle*> &alltgl) const
+    {
+        return !_isEdgeMatch( alltgl, 2, 1) ||   // Top edge vertices
+               !_isEdgeMatch( alltgl, 2, 0) ||   // Left edge vertices
+               !_isEdgeMatch( alltgl, 1, 0);     // Right edge vertices
     }   // end isTwisted
 
 private:
-    bool findNext( Vec2i e)
+    bool _findNext( const Vec2i &e)
     {
-        const Mesh& mod = _parser->mesh();
+        _nfid = -1;
+        int pnfid = -1;  // Provisional directed _fid to parse next (if specified)
+        const IntSet& sfs = _parser->mesh().sfaces( e[0], e[1]);
 
-        nfid = -1;
-        int pnfid = -1;  // Provisional directed fid to parse next (if specified)
-        const IntSet& sfs = mod.sfaces( e[0], e[1]);
-
-        if ( _parser->_parseEdge( fid, e, pnfid) && sfs.size() > 1)
+        if ( _parser->_parseEdge( _fid, e, pnfid) && sfs.size() > 1)
         {
             if ( pnfid >= 0)
             {
                 // Check that pnfid actually is a member of the shared edge and that it hasn't yet been parsed.
                 if ( _parser->_parsed.count(pnfid) == 0 && sfs.count( pnfid) > 0)
-                    nfid = pnfid;
+                    _nfid = pnfid;
             }   // end if
             else // pnfid < 0: Next polygon to parse wasn't specified.
             {
@@ -112,47 +115,38 @@ private:
                 {
                     if ( _parser->_parsed.count(fd) == 0)    // Found a candidate that's not yet been parsed?
                     {
-                        nfid = fd;
+                        _nfid = fd;
                         break;
                     }   // end if
                 }   // end for
             }   // end if
         }   // end if
 
-        return nfid >= 0;
-    }   // end findNext
+        return _nfid >= 0;
+    }   // end _findNext
 
-    bool isEdgeTwisted( const std::unordered_map<int, Triangle*>* alltgl, const Vec2i& e) const
+    bool _isEdgeMatch( const std::unordered_map<int, Triangle*>& alltgl, int i, int j) const
     {
-        // Check if any of the shared face ids (not tgl->id()) are in alltgl, and if so,
-        // that their vertex ordering is correct. Note that whatever edge from tgl that
-        // we're checking, the correct matching order of vertices on the adjacent triangle
-        // (if present in alltgl) should always be its right edge (first two vertices).
-        for ( int fd : _parser->mesh().sfaces(e[0], e[1]))
+        const IntSet &sfids = _parser->mesh().sfaces( _vtxs[i], _vtxs[j]);
+        for ( int fd : sfids)
         {
-            if ( fd != fid && alltgl->count(fd) > 0)
+            if ( fd != _fid && alltgl.count(fd) > 0)
             {
-                if ( !alltgl->at(fd)->joinMatch(e))
-                    return true;
+                const Triangle &toth = *alltgl.at(fd);
+                if ( toth._vtxs[i] != _vtxs[j] || toth._vtxs[j] != _vtxs[i])
+                    return false;
             }   // end if
         }   // end for
-        return false;
-    }   // end isEdgeTwisted
-
-    // Returns true iff the given edge matches the joining edge on this triangle.
-    bool joinMatch( const Vec2i& e) const { return e[0] == vtxs[0] && e[1] == vtxs[1];}
-
-    Vec2i topEdge() const { return Vec2i( vtxs[2], vtxs[1]);}
-    Vec2i leftEdge() const { return Vec2i( vtxs[0], vtxs[2]);}
-    Vec2i rightEdge() const { return Vec2i( vtxs[1], vtxs[0]);}
+        return true;
+    }   // end isEdgeMatch
 
     FaceParser *_parser;
-    int fid, nfid;  // id of this triangle and of the next triangle to parse.
-    Vec3i vtxs; // Vertex order of this triangle
+    int _fid, _nfid;  // id of this triangle and of the next triangle to parse.
+    Vec3i _vtxs; // Vertex order of this triangle (r,a,b) where r is bottom corner, a is top right and b is top left.
 };  // end struct
 
 
-int FaceParser::parse( int fid, const Vec3f &planev, bool clearParsed)
+int FaceParser::parse( int fid, const r3d::Vec3f &planev, bool clearParsed)
 {
     if ( clearParsed)
         _parsed.clear();
@@ -161,15 +155,17 @@ int FaceParser::parse( int fid, const Vec3f &planev, bool clearParsed)
     const int* vindices = _mesh.fvidxs(fid);
     int vroot = vindices[0];
     int va = vindices[1];
+    const int vb = vindices[2];
 
     // Decide parse ordering of face vertices?
     // If the face normal calculated is not in the direction of planev, swap starting vertices.
     if ( planev.norm() > 0.0f && planev.dot(_mesh.calcFaceNorm(fid)) < 0)
         std::swap( vroot, va);
 
-    std::unordered_map<int, Triangle*> *alltgl = new std::unordered_map<int, Triangle*>; // All triangles parsed (need to record vertex ordering)
+    // All triangles parsed (need to record vertex ordering)
+    std::unordered_map<int, Triangle*> *alltgl = new std::unordered_map<int, Triangle*>;
     std::stack<Triangle*> *stack = new std::stack<Triangle*>;
-    Triangle* tgl = new Triangle( this, fid, Vec2i( vroot, va));
+    Triangle* tgl = new Triangle( this, fid, Vec3i( vroot, va, vb));
     (*alltgl)[tgl->id()] = tgl;
     stack->push( tgl);
 
@@ -199,7 +195,7 @@ int FaceParser::parse( int fid, const Vec3f &planev, bool clearParsed)
                 tgl = tgl->goRight();
                 (*alltgl)[tgl->id()] = tgl;
             }   // end else if
-            else // All options blocked, so need to pop another triangle from the stack.
+            else // All options blocked, so pop another triangle from the stack.
                 break;
         }   // end while
 
@@ -208,7 +204,9 @@ int FaceParser::parse( int fid, const Vec3f &planev, bool clearParsed)
         // If it doesn't then twisting of the mesh has occurred and consistent surface normal ordering across
         // all parsed polygons will not be possible and function twisted() should return true.
         if ( !_twisted)  // Don't need to check if already found to be twisted
-            _twisted = tgl->isTwisted( alltgl);
+            _twisted = tgl->isTwisted( *alltgl);
+
+        //std::cerr << "alltgl->size() = " << alltgl->size() << ": twisted = " << std::boolalpha << _twisted << std::endl;
     }   // end while
 
     const int nparsed = static_cast<int>(alltgl->size());
@@ -224,13 +222,15 @@ int FaceParser::parse( int fid, const Vec3f &planev, bool clearParsed)
 
 void FaceParser::_processTriangleParsers( int fid, const Vec3i& vs)
 {
-    std::for_each( std::begin(_tparsers), std::end(_tparsers), [=]( TriangleParser* t){ t->parseTriangle( fid, vs[0], vs[1], vs[2]);});
+    std::for_each( std::begin(_tparsers), std::end(_tparsers),
+            [&]( TriangleParser* t){ t->parseTriangle( fid, vs[0], vs[1], vs[2]);});
 }   // end _processTriangleParsers
 
 
 void FaceParser::_informFinishedParsing()
 {
-    std::for_each( std::begin(_tparsers), std::end(_tparsers), []( TriangleParser* t){ t->finishedParsing();});
+    std::for_each( std::begin(_tparsers), std::end(_tparsers),
+            []( TriangleParser* t){ t->finishedParsing();});
     if ( _bparser)
         _bparser->finishedParsing();
 }   // end _informFinishedParsing

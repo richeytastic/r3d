@@ -452,9 +452,7 @@ bool Mesh::adjustRawVertex( int vidx, float x, float y, float z) { return adjust
 
 bool Mesh::adjustRawVertex( int vidx, const Vec3f &v)
 {
-    if ( _vids.count(vidx) == 0)
-        return false;
-
+    assert( _vids.count(vidx) > 0);
     if ( v.array().isNaN().any())
         return false;
 
@@ -473,12 +471,21 @@ bool Mesh::adjustRawVertex( int vidx, const Vec3f &v)
 }   // end adjustRawVertex
 
 
+void Mesh::swapVertexPositions( int v0, int v1)
+{
+    assert( _vids.count(v0) > 0);
+    assert( _vids.count(v1) > 0);
+    Vec3f t0 = _vtxs.at(v0);
+    Vec3f t1 = _vtxs.at(v1);
+    adjustRawVertex( v0, t1);
+    adjustRawVertex( v1, t0);
+}   // end swapVertexPositions
+
+
 bool Mesh::scaleVertex( int vidx, float sf)
 {
+    assert( _vids.count(vidx) > 0);
     if ( cvIsNaN( sf))
-        return false;
-
-    if ( _vids.count(vidx) == 0)
         return false;
 
     if ( !hasFixedTransform())
@@ -882,6 +889,13 @@ void Mesh::reverseFaceVertices( int fid)
         std::swap( fuvis[0], fuvis[2]);
     }   // end if
 }   // end reverseFaceVertices
+
+
+void Mesh::invertNormals()
+{
+    for ( int fid : _fids)
+        reverseFaceVertices(fid);
+}   // end invertNormals
 
 
 Vec3f Mesh::calcFaceNorm( int fid, bool useTransformed) const
