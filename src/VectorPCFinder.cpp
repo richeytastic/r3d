@@ -112,7 +112,7 @@ Mat3f VectorPCFinder::estimateRotationMatrix( const r3d::Mesh &mesh, const IntSe
     Vec3f mpos = Vec3f::Zero();
     for ( int vid : vids)
         mpos += mesh.vtx(vid);
-    mpos /= vids.size();
+    mpos /= float(vids.size());
     for ( int vid : vids)
         frows.row(i++) = mesh.vtx( vid) - mpos;
     const Mat3f E = VectorPCFinder(frows).eigenVectors(); // Find the eigen vectors
