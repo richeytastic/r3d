@@ -906,6 +906,17 @@ Vec3f Mesh::calcFaceNorm( int fid, bool useTransformed) const
 }   // end calcFaceNorm
 
 
+Vec3f Mesh::calcVertexNorm( int vidx, bool useTransformed) const
+{
+    Vec3f nrm = Vec3f::Zero();
+    const IntSet &fids = faces(vidx);
+    for ( int fid : fids)
+        nrm += calcFaceVector( fid, useTransformed);
+    nrm.normalize();
+    return nrm;
+}   // end calcVertexNorm
+
+
 Vec3f Mesh::calcFaceVector( int fid, bool useTransformed) const
 {
     assert( faces().count(fid) > 0);

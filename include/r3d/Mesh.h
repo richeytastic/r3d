@@ -25,9 +25,9 @@ namespace r3d {
 class r3d_EXPORT Mesh
 {
 public:
-    /********************************************************************************************************************/
-    /****** Creating / Copying ******************************************************************************************/
-    /********************************************************************************************************************/
+    /********************************************************************************************************/
+    /****** Creating / Copying ******************************************************************************/
+    /********************************************************************************************************/
 
     using Ptr = std::shared_ptr<Mesh>;
 
@@ -97,9 +97,9 @@ public:
     void join( const Mesh&, bool txvrts=true);
 
 
-    /********************************************************************************************************************/
-    /****** Transform ***************************************************************************************************/
-    /********************************************************************************************************************/
+    /********************************************************************************************************/
+    /****** Transform ***************************************************************************************/
+    /********************************************************************************************************/
 
     /**
      * For affine transforms of this object, base vertex positions can be automatically transformed through a matrix
@@ -137,9 +137,9 @@ public:
     bool hasFixedTransform( float precision=1e-4f) const;
 
 
-    /********************************************************************************************************************/
-    /****** Vertices ****************************************************************************************************/
-    /********************************************************************************************************************/
+    /********************************************************************************************************/
+    /****** Vertices ****************************************************************************************/
+    /********************************************************************************************************/
 
     /**
      * Return the number vertices this mesh has.
@@ -200,6 +200,12 @@ public:
     bool adjustRawVertex( int vidx, float x, float y, float z);
 
     /**
+     * Calculate the normal for the given vertex weighted by the areas of its adjacent facets
+     * (larger facets weight the normal more in its direction). The returned vector is unit length.
+     */
+    Vec3f calcVertexNorm( int fid, bool useTransformed=false) const;
+
+    /**
      * Swap the positions of the two vertices.
      */
     void swapVertexPositions( int vidx0, int vidx1);
@@ -223,9 +229,9 @@ public:
     int maximallyExtrudedVertex( const std::vector<int>&) const;
 
 
-    /********************************************************************************************************************/
-    /****** Faces *******************************************************************************************************/
-    /********************************************************************************************************************/
+    /********************************************************************************************************/
+    /****** Faces *******************************************************************************************/
+    /********************************************************************************************************/
 
     /**
      * Return the number of faces in this mesh.
@@ -279,7 +285,8 @@ public:
     inline const Face& face( int id) const { return _faces.at(id);}
 
     /**
-     * Convenience function to return the given face's vertex IDs in the order they are stored or null if ID invalid.
+     * Convenience function to return the given face's vertex IDs
+     * in the order they are stored or null if ID invalid.
      */
     const int* fvidxs( int id) const;
 
@@ -373,9 +380,9 @@ public:
     int subdivideFace( int fid, const Vec3f&);
 
 
-    /********************************************************************************************************************/
-    /****** Edges *******************************************************************************************************/
-    /********************************************************************************************************************/
+    /********************************************************************************************************/
+    /****** Edges *******************************************************************************************/
+    /********************************************************************************************************/
 
     /**
      * Return the number of edges in this mesh.
@@ -428,7 +435,7 @@ public:
     bool edge( int edgeId, int& v0, int& v1) const;
 
     /**
-     * Returns the ID of the edge comprised of vertex vi and vj, or -1 if no edge connecting those vertices exists.
+     * Returns ID of the edge comprised of vertex vi and vj, or -1 if no edge connecting those vertices exists.
      */
     int edgeId( int vi, int vj) const;
     int edgeId( const Vec2i&) const;
@@ -444,16 +451,16 @@ public:
     int addEdge( int vi, int vj);
 
     /**
-     * Removes the given edge and any adjacent faces. Does NOT remove vertices! Calling these functions will
-     * break sequential edge ID ordering (see hasSequentialEdgeIds). Returns true if the edge existed and was removed.
+     * Removes given edge and any adjacent faces. Does NOT remove vertices! These functions break
+     * sequential edge ID ordering (see hasSequentialEdgeIds). Returns true if edge existed and was removed.
      */
     bool removeEdge( int edgeId);
     bool removeEdge( int vi, int vj);
 
 
-    /********************************************************************************************************************/
-    /****** Materials ***************************************************************************************************/
-    /********************************************************************************************************************/
+    /********************************************************************************************************/
+    /****** Materials ***************************************************************************************/
+    /********************************************************************************************************/
 
     /**
      * Returns the number of materials this mesh uses.
@@ -566,12 +573,12 @@ public:
     Vec2f calcTextureCoords( int fid, const Vec3f&) const;
 
 
-    /********************************************************************************************************************/
-    /****** Utilities / Misc ********************************************************************************************/
-    /********************************************************************************************************************/
+    /********************************************************************************************************/
+    /****** Utilities / Misc ********************************************************************************/
+    /********************************************************************************************************/
 
     /**
-     * Return the position coplanar to face fid that the point projects to (not necessarily within the face's bounds).
+     * Return position coplanar to face fid that point projects to (not necessarily within the face's bounds).
      * Given point is considered transformed in accordance with this mesh's transform matrix.
      */
     Vec3f projectToFacePlane( int fid, const Vec3f&) const;

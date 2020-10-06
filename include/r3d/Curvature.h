@@ -71,11 +71,6 @@ public:
 
     /*****************************************************************************************/
 
-    // Calculate the normal for the given vertex weighted by the areas of its adjacent polygons
-    // Larger polygons weight the normal more in the direction of that polygon. The returned
-    // normal is always unit length.
-    static Vec3f calcVertexNormal( const Mesh&, int vi);
-
     // Given scalars a and b, compute c = cos(t) and s = sin(t) for some angle t so:
     // | c  s|t  |a|  =  |r|
     // |-s  c|   |b|     |0|

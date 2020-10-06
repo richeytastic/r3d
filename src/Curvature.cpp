@@ -40,24 +40,6 @@ Vec3f Curvature::vertexPC2( int vi, float& kp2) const
 }   // end vertexPC2
 
 
-// static
-Vec3f Curvature::calcVertexNormal( const Mesh& m, int vidx)
-{
-    Vec3f nrm = Vec3f::Zero();
-    const IntSet& fids = m.faces(vidx);
-    for ( int fid : fids)
-    {
-        const int *fvidxs = m.fvidxs(fid);
-        const Vec3f& vA( m.uvtx(fvidxs[0]));
-        const Vec3f& vB( m.uvtx(fvidxs[1]));
-        const Vec3f& vC( m.uvtx(fvidxs[2]));
-        nrm += (vB - vA).cross(vC - vB);  // Magnitude of cross product vector is twice triangle area
-    }   // end for
-    nrm.normalize();
-    return nrm;
-}   // end calcVertexNormal
-
-
 // public static
 Curvature::Ptr Curvature::create( const Mesh& m)
 {
