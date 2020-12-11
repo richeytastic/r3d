@@ -21,7 +21,7 @@
 #include "Mesh.h"
 
 /**
- * Set boundaries of into lists of vertices in connected order.
+ * Sort boundaries of a mesh into lists of vertices in connected order.
  */
 namespace r3d {
 

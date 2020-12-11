@@ -203,7 +203,7 @@ public:
      * Calculate the normal for the given vertex weighted by the areas of its adjacent facets
      * (larger facets weight the normal more in its direction). The returned vector is unit length.
      */
-    Vec3f calcVertexNorm( int fid, bool useTransformed=false) const;
+    Vec3f calcVertexNorm( int vidx, bool useTransformed=false) const;
 
     /**
      * Swap the positions of the two vertices.
@@ -416,8 +416,8 @@ public:
     const Edge *commonEdge( int fid0, int fid1) const;
 
     /**
-     * Given a set of face IDs, return the "psuedo" boundary edge ID set which is comprised of the edges
-     * of faces in the given set where the adjacent faces of the edge are NOT in the given set. Note that
+     * Given a set of face IDs, return the "pseudo" boundary edge ID set which is comprised of the edges
+     * of the faces in the parameter set where the adjacent face is NOT in the parameter set. Note that
      * sorting the returned set of edges into different boundary lists will only work if the given set
      * of faces is from a 2D manifold.
      */
