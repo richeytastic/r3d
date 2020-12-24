@@ -182,7 +182,15 @@ void Mesh::addTransformMatrix( const Mat4f &tmat)
 void Mesh::fixTransformMatrix()
 {
     for ( int vidx : _vids)
-        _vtxs[vidx] = vtx(vidx); // Ensures transform against existing matrix is done.
+    {
+        Vec3f &vec = _vtxs[vidx];   // The vertex to modify
+        const size_t h = hash(vec, HASH_NDP);
+        assert( _v2id.count(h) > 0);
+        _v2id.erase( h);    // Remove original vertex hash value
+        vec = vtx(vidx); // Ensures transform against existing matrix is done.
+        _v2id[ hash( vec, HASH_NDP)] = vidx;  // Hash back with new vertices
+    }   // end for
+
     _imat = _tmat = Mat4f::Identity();  // NB not necessary to clear vertex cache _tvtxs
 }   // end fixTransformMatrix
 
@@ -413,6 +421,7 @@ bool Mesh::removeVertex( int vi)
         return false;
 
     const size_t key = hash( _vtxs.at(vi), HASH_NDP);
+    assert(_v2id.count(key) > 0);
     _v2id.erase(key);
     _vids.erase(vi);
     _vtxs.erase(vi);
@@ -456,7 +465,7 @@ bool Mesh::adjustRawVertex( int vidx, const Vec3f &v)
     if ( v.array().isNaN().any())
         return false;
 
-    Vec3f &vec = _vtxs.at(vidx);       // The vertex to modify
+    Vec3f &vec = _vtxs[vidx];          // The vertex to modify
     size_t h = hash(vec, HASH_NDP);    // Existing hash
     assert( _v2id.count(h) > 0);
     _v2id.erase( h); // Remove original vertex hash value
@@ -491,7 +500,7 @@ bool Mesh::scaleVertex( int vidx, float sf)
     if ( !hasFixedTransform())
         std::cerr << "[WARNING] r3d::Mesh::scaleVertex: transform is not Identity!" << std::endl;
 
-    Vec3f &vec = _vtxs.at(vidx);   // The vertex to modify
+    Vec3f &vec = _vtxs[vidx];   // The vertex to modify
     const size_t h = hash(vec, HASH_NDP);
     assert( _v2id.count(h) > 0);
     _v2id.erase( h);    // Remove original vertex hash value
