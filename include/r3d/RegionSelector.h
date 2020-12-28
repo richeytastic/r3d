@@ -31,10 +31,10 @@ public:
     // Return the mesh this region selector is for.
     inline const Mesh& mesh() const { return _mesh;}
 
-    // Adjust the centre of the radial region to position c. Vertex cvtx must be the nearest vertex
-    // on the mesh to c. Use rad as the radius value. Returns the number of vertices within the
+    // Adjust the centre of the radial region to position c. Face Id cfidx must be face ID on
+    // the mesh under c. Use rad as the radius value. Returns the number of vertices within the
     // newly selected region or 0 if the new centre is not within the existing radius.
-    size_t update( int cvtx, const Vec3f& c, float rad);
+    size_t update( int cfidx, const Vec3f& c, float rad);
 
     Vec3f centre() const;  // Get the current centre
     inline float radius() const { return _rad;}   // Get the current radius value

@@ -77,16 +77,17 @@ int testMembership( int vidx, const Mesh& m, const Vec3f& ov, float R)
 
 
 // public
-size_t RegionSelector::update( int svtx, const Vec3f& c, float nrad)
+size_t RegionSelector::update( int cf, const Vec3f& c, float nrad)
 {
-    assert( svtx >= 0);
-    assert( !_mesh.faces(svtx).empty());
-    _cf = *_mesh.faces(svtx).begin();
+    assert( cf >= 0);
+    _cf = cf;
     const int* fvidxs = _mesh.fvidxs(_cf);
     _cval = calcBarycentric( _mesh.vtx(fvidxs[0]), _mesh.vtx(fvidxs[1]), _mesh.vtx(fvidxs[2]), c);
     _body.clear();
     _front->clear();
-    _front->insert( svtx);
+    _front->insert( fvidxs[0]);
+    _front->insert( fvidxs[1]);
+    _front->insert( fvidxs[2]);
 
     nrad = std::max(0.0f, nrad);
     const float R = nrad < sqrtf( FLT_MAX) ? nrad*nrad : nrad;
