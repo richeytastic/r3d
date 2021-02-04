@@ -1448,7 +1448,7 @@ Vec3f Mesh::toBarycentric( int fid, const Vec3f &p) const
 {
     const int *vidxs = fvidxs(fid);
     assert(vidxs);
-    return calcBarycentric( uvtx(vidxs[0]), uvtx(vidxs[1]), uvtx(vidxs[2]), p);
+    return calcBarycentric( vtx(vidxs[0]), vtx(vidxs[1]), vtx(vidxs[2]), p);
 }   // end toBaryCentric
 
 

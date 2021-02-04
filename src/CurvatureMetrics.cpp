@@ -43,9 +43,9 @@ float CurvatureMetrics::faceDeterminant( int fid) const
 {
     const int *fvidxs = _cmap.mesh().fvidxs( fid);
     assert( fvidxs);
-    const Vec3f &n0 = _cmap.vertexNormal( fvidxs[0]);
-    const Vec3f &n1 = _cmap.vertexNormal( fvidxs[1]);
-    const Vec3f &n2 = _cmap.vertexNormal( fvidxs[2]);
+    const Vec3f n0 = vertexNormal( fvidxs[0]);
+    const Vec3f n1 = vertexNormal( fvidxs[1]);
+    const Vec3f n2 = vertexNormal( fvidxs[2]);
     return n2.dot(n0.cross(n1));   // Calculate determinant as the scalar triple product
 }   // end faceDeterminant
 
@@ -54,6 +54,9 @@ float CurvatureMetrics::vertexDeterminant( int vid) const
 {
     return vertexValue( _cmap.mesh(), vid, [this](int fid){ return faceDeterminant(fid);});
 }   // end vertexDeterminant
+
+
+r3d::Vec3f CurvatureMetrics::vertexNormal( int vid) const { return _cmap.vertexNormal(vid);}
 
 
 float CurvatureMetrics::faceKP1FirstOrder( int fid) const
@@ -71,12 +74,6 @@ float CurvatureMetrics::faceKP1FirstOrder( int fid) const
 }   // end faceKP1FirstOrder
 
 
-float CurvatureMetrics::vertexKP1FirstOrder( int vid) const
-{
-    return vertexValue( _cmap.mesh(), vid, [this](int fid){ return faceKP1FirstOrder(fid);});
-}   // end vertexKP1FirstOrder
-
-
 float CurvatureMetrics::faceKP2FirstOrder( int fid) const
 {
     const int *fvidxs = _cmap.mesh().fvidxs( fid);
@@ -92,7 +89,19 @@ float CurvatureMetrics::faceKP2FirstOrder( int fid) const
 }   // end faceKP2FirstOrder
 
 
+float CurvatureMetrics::vertexKP1FirstOrder( int vid) const
+{
+    float ka;
+    _cmap.vertexPC1( vid, ka);
+    return ka;
+    //return vertexValue( _cmap.mesh(), vid, [this](int fid){ return faceKP1FirstOrder(fid);});
+}   // end vertexKP1FirstOrder
+
+
 float CurvatureMetrics::vertexKP2FirstOrder( int vid) const
 {
-    return vertexValue( _cmap.mesh(), vid, [this](int fid){ return faceKP2FirstOrder(fid);});
+    //return vertexValue( _cmap.mesh(), vid, [this](int fid){ return faceKP2FirstOrder(fid);});
+    float ka;
+    _cmap.vertexPC2( vid, ka);
+    return ka;
 }   // end vertexKP2FirstOrder

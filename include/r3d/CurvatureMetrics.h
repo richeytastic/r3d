@@ -35,6 +35,7 @@ public:
 
     float faceDeterminant( int fid) const;
     float vertexDeterminant( int vid) const;
+    Vec3f vertexNormal( int vid) const;
 
 private:
     const Curvature &_cmap;

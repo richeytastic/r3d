@@ -19,6 +19,7 @@
 #include <cassert>
 #include <cfloat>
 #include <cstring>
+#include <algorithm>
 using r3d::Colour;
 
 
@@ -80,94 +81,73 @@ const double& Colour::operator[]( int i) const
 }   // end operator[]
 
 
-// static
 Colour Colour::hsv2rgb( const Colour &hsv)
 {
-    Colour rgb;
-    if ( hsv[1] <= 0.0)
-        rgb[0] = rgb[1] = rgb[2] = hsv[2];
-    else
+    const double h = hsv[0];
+    const double s = hsv[1];
+    const double v = hsv[2];
+
+    const int hi = (int)(h / 60.0) % 6;
+    const double f  = (h / 60.0) - hi;
+    const double p  = v * (1.0 - s);
+    const double q  = v * (1.0 - s * f);
+    const double t  = v * (1.0 - s * (1.0 - f));
+
+    double r = 0;
+    double g = 0;
+    double b = 0;
+    switch (hi)
     {
-        double hh = hsv[0];
-        if ( hh >= 360.0)
-            hh = 0.0;
-        hh /= 60.0;
-        const long i = (long)hh;
-        const double ff = hh - i;
-        const double p = hsv[2] * (1.0 - hsv[1]);
-        const double q = hsv[2] * (1.0 - (hsv[1] * ff));
-        const double t = hsv[2] * (1.0 - (hsv[1] * (1.0 - ff)));
+        case 0: r = v, g = t, b = p; break;
+        case 1: r = q, g = v, b = p; break;
+        case 2: r = p, g = v, b = t; break;
+        case 3: r = p, g = q, b = v; break;
+        case 4: r = t, g = p, b = v; break;
+        case 5: r = v, g = p, b = q; break;
+    }   // end switch
 
-        switch (i)
-        {
-            case 0:
-                rgb[0] = hsv[2];
-                rgb[1] = t;
-                rgb[2] = p;
-                break;
-            case 1:
-                rgb[0] = q;
-                rgb[1] = hsv[2];
-                rgb[2] = p;
-                break;
-            case 2:
-                rgb[0] = p;
-                rgb[1] = hsv[2];
-                rgb[2] = t;
-                break;
-            case 3:
-                rgb[0] = p;
-                rgb[1] = q;
-                rgb[2] = hsv[2];
-                break;
-            case 4:
-                rgb[0] = t;
-                rgb[1] = p;
-                rgb[2] = hsv[2];
-                break;
-            default:
-                rgb[0] = hsv[2];
-                rgb[1] = p;
-                rgb[2] = q;
-                break;
-        }   // end switch
-    }   // end else
-
+    Colour rgb;
+    rgb[0] = r;
+    rgb[1] = g;
+    rgb[2] = b;
     return rgb;
 }   // end hsv2rgb
 
 
-// static
 Colour Colour::rgb2hsv( const Colour &rgb)
 {
+    const double r = rgb[0];
+    const double g = rgb[1];
+    const double b = rgb[2];
+    const double max = std::max( r, std::max(g, b));
+    const double min = std::min( r, std::min(g, b));
+
     Colour hsv;
-    double min = rgb[0] < rgb[1] ? rgb[0] : rgb[1];
-    min = min < rgb[2] ? min : rgb[2];
-
-    double max = rgb[0] > rgb[1] ? rgb[0] : rgb[1];
-    max = max > rgb[2] ? max : rgb[2];
-    assert( max >= 0.0);
-
-    const double delta = max - min;
-
-    hsv[0] = 0.0;
-    hsv[1] = 0.0;
     hsv[2] = max;
 
-    if ( delta >= DBL_MIN && max > 0.0)
+    if (max == 0.0)
     {
-        hsv[1] = delta / max;
-        if( rgb[0] >= max)
-            hsv[0] = (rgb[1] - rgb[2]) / delta; // yellow 2 magenta
-        else if ( rgb[1] >= max)
-            hsv[0] = 2.0 + (rgb[2] - rgb[0]) / delta;   // cyan 2 yellow
-        else
-            hsv[0] = 4.0 + (rgb[0] - rgb[1]) / delta;   // magenta 2 cyan
-
-        hsv[0] *= 60.0; // degrees
-        if ( hsv[0] < 0.0)
-            hsv[0] += 360.0;
+        hsv[0] = 0;
+        hsv[1] = 0;
     }   // end if
+    else if (max - min == 0.0)
+    {
+        hsv[1] = 0;
+        hsv[0] = 0;
+    }   // end else if
+    else
+    {
+        hsv[1] = (max - min) / max;
+        if ( max == r)
+            hsv[0] = 60 * ((g - b) / (max - min)) + 0;
+        else if (max == g)
+            hsv[0] = 60 * ((b - r) / (max - min)) + 120;
+        else
+            hsv[0] = 60 * ((r - g) / (max - min)) + 240;
+    }   // end else
+
+    if (hsv[0] < 0)
+        hsv[0] += 360.0;
 
     return hsv;
 }   // end rgb2hsv
