@@ -30,9 +30,10 @@ public:
     Colour( const Colour&) = default;
     Colour &operator=( const Colour&) = default;
 
-    Colour( int, int, int);
-    Colour( size_t, size_t, size_t);
-    Colour( double, double, double);
+    Colour( int, int, int);             // Values in [0,255]
+    Colour( size_t, size_t, size_t);    // Values in [0,255]
+
+    Colour( double, double, double);    // Values in [0,1]
     explicit Colour( const float*);
     explicit Colour( const double*);
 
@@ -41,6 +42,12 @@ public:
 
     static Colour hsv2rgb( const Colour&);
     static Colour rgb2hsv( const Colour&);
+
+    static Colour white();
+    static Colour black();
+    static Colour red();
+    static Colour green();
+    static Colour blue();
 
 private:
     double _vals[3];

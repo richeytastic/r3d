@@ -47,9 +47,9 @@ Colour::Colour( size_t x, size_t y, size_t z)
 
 Colour::Colour( double x, double y, double z)
 {
-    _vals[0] = x/255;
-    _vals[1] = y/255;
-    _vals[2] = z/255;
+    _vals[0] = x;
+    _vals[1] = y;
+    _vals[2] = z;
 }   // end ctor
 
 
@@ -79,6 +79,13 @@ const double& Colour::operator[]( int i) const
     assert( i >= 0 && i < 3);
     return _vals[i];
 }   // end operator[]
+
+
+Colour Colour::white() { return Colour(1.0, 1.0, 1.0);}
+Colour Colour::black() { return Colour(0.0, 0.0, 0.0);}
+Colour Colour::red() { return Colour(1.0, 0.0, 0.0);}
+Colour Colour::green() { return Colour(0.0, 1.0, 0.0);}
+Colour Colour::blue() { return Colour(0.0, 0.0, 1.0);}
 
 
 Colour Colour::hsv2rgb( const Colour &hsv)
