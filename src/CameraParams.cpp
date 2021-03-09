@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2019 Richard Palmer
+ * Copyright (C) 2021 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ using r3d::Vec3f;
 
 
 CameraParams::CameraParams( const Vec3f& p, const Vec3f& f, const Vec3f& u, float fv)
-    : _pos(p), _foc(f), _upv(u), _fov(fv)
+    : _pos(p), _foc(f), _upv(u), _fov(fv), _pscale(0.0f)
 {
     _upv.normalize(); // Ensure up vector is unit length
     assert( fv > 0.0 && fv < 180.0);
@@ -59,9 +59,10 @@ void CameraParams::setPositionFromFocus( float r, const Vec3f* newfocus)
 }   // end setPositionFromFocus
 
 
-void CameraParams::rotateAboutUpAxis( float degs)
+namespace {
+
+Vec3f rotateAboutAxis( const Vec3f &pos, Vec3f axis, float degs)
 {
-    Vec3f axis = _upv;
     axis.normalize();
     Eigen::Quaternionf r;
     r = Eigen::AngleAxisf( degs * (float)(EIGEN_PI/180), axis);
@@ -69,11 +70,25 @@ void CameraParams::rotateAboutUpAxis( float degs)
 
     Eigen::Quaternionf qpos;
     qpos.w() = 0;
-    qpos.vec() = _pos;
+    qpos.vec() = pos;
 
     Eigen::Quaternionf rotPos = r * qpos * r.inverse();
-    _pos = rotPos.vec();
-}   // end rotateAboutUpAxis
+    return rotPos.vec();
+}   // end rotateAboutAxis
+
+}   // end namespace
+
+
+void CameraParams::rotate( float degs) { _pos = rotateAboutAxis( _pos, _upv, degs);}
+
+
+void CameraParams::tilt( float degs)
+{
+    Vec3f cvec = _pos - _foc;
+    cvec.normalize();
+    const Vec3f rvec = cvec.cross(_upv);
+    _pos = rotateAboutAxis( _pos, rvec, degs);
+}   // end tilt
 
 
 cv::Point2f CameraParams::project( const Vec3f& t) const
@@ -132,10 +147,7 @@ void CameraParams::setFoV( float v)
 }   // end setFoV
 
 
-void CameraParams::setViewRadius( float r)
-{
-    _fov = atan2f( r, distance());
-}   // end setViewRadius
+void CameraParams::setViewRadius( float r) { _fov = atan2f( r, distance());}
 
 
 float CameraParams::fovRads() const { return float(_fov * EIGEN_PI/180);}
@@ -146,9 +158,12 @@ float CameraParams::calcFocalLength() const { return float(1.0/tan( _fov * EIGEN
 
 std::ostream& r3d::operator<<( std::ostream& os, const CameraParams& cp)
 {
-    os << "CAM_POS:   " << cp.pos().transpose() << std::endl;
-    os << "CAM_FOCUS: " << cp.focus().transpose() << std::endl;
-    os << "CAM_UP:    " << cp.up().transpose() << std::endl;
-    os << "CAM_FOV:   " << cp.fov() << std::endl;
+    os << "POSITION:   " << cp.pos().transpose() << std::endl;
+    os << "FOCUS: " << cp.focus().transpose() << std::endl;
+    os << "UP:    " << cp.up().transpose() << std::endl;
+    if ( cp.isParallel())
+        os << "PARALLEL_SCALE: " << cp.parallelScale() << std::endl;
+    else
+        os << "FOV:   " << cp.fov() << std::endl;
     return os;
 }   // end operator<<

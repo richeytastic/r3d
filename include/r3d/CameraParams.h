@@ -58,6 +58,10 @@ public:
     // Set a new field of view in degrees (constrained to be in (0,180]).
     void setFoV( float v);
 
+    inline float parallelScale() const { return _pscale;}
+    inline bool isParallel() const { return _pscale > 0.0f;}
+    inline void setParallelScale( float pscale) { _pscale = std::max( 0.0f, std::min( 1.0f, pscale));}
+
     // Given a view radius for the image plane, set a new field
     // of view while keeping the camera position fixed.
     void setViewRadius( float r);
@@ -72,14 +76,17 @@ public:
     // Convenience function which takes the proportional coordinates and returns actual coords.
     cv::Point project( const Vec3f& t, const cv::Size2i& viewPortSize) const;
 
-    // Do perspective projection to return a world position with the X and Y values calculated and Z as given.
+    // Perspective project to return a world position with the X and Y values calculated and Z as given.
     Vec3f project( const cv::Point2f& p, float Z) const;
 
     // Get the distance from t to the plane cooincident with the camera.
     float distance( const Vec3f& t) const;
 
-    // Set a new position based on a clockwise rotation along the up vector.
-    void rotateAboutUpAxis( float degs);
+    // Reposition based on a rotation (+ve = clockwise) around the up vector.
+    void rotate( float degs);
+
+    // Reposition based on a rotation (+ve = clockwise) around the right vector.
+    void tilt( float degs);
 
     // Convenience calculations
     float fovRads() const; // fov * pi/180
@@ -92,6 +99,7 @@ private:
     Vec3f _foc; // Camera focus
     Vec3f _upv; // Camera up vector
     float _fov; // Vertical field of view in degrees (must be > 0 and <= 180)
+    float _pscale;  // Parallel scale (if used)
 };  // end class
 
 

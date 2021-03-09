@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2019 Richard Palmer
+ * Copyright (C) 2021 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,9 +57,7 @@ Transformer::Transformer( const Vec3f& vnorm, const Vec3f& vup, const Vec3f& t)
 }   // end ctor
 
 
-namespace {
-
-void _initMatrix( float rads, const Vec3f& axis, const Vec3f& t, Mat4f& tmat)
+Transformer::Transformer( float rads, const Vec3f& axis, const Vec3f& t)
 {
     Vec3f u = axis;    // Ensure normalised axis
     u.normalize();
@@ -75,33 +73,25 @@ void _initMatrix( float rads, const Vec3f& axis, const Vec3f& t, Mat4f& tmat)
     const float zst = z*st;
 
     // Set the 3x3 upper left submatrix with the rotation params
-    tmat(0,0) = x*x*mct + ct;
-    tmat(0,1) = x*y*mct - zst;
-    tmat(0,2) = x*z*mct + yst;
-    tmat(0,3) = t[0];
+    _tmat(0,0) = x*x*mct + ct;
+    _tmat(0,1) = x*y*mct - zst;
+    _tmat(0,2) = x*z*mct + yst;
+    _tmat(0,3) = t[0];
 
-    tmat(1,0) = y*x*mct + zst;
-    tmat(1,1) = y*y*mct + ct;
-    tmat(1,2) = y*z*mct - xst;
-    tmat(1,3) = t[1];
+    _tmat(1,0) = y*x*mct + zst;
+    _tmat(1,1) = y*y*mct + ct;
+    _tmat(1,2) = y*z*mct - xst;
+    _tmat(1,3) = t[1];
 
-    tmat(2,0) = z*x*mct - yst;
-    tmat(2,1) = z*y*mct + xst;
-    tmat(2,2) = z*z*mct + ct;
-    tmat(2,3) = t[2];
+    _tmat(2,0) = z*x*mct - yst;
+    _tmat(2,1) = z*y*mct + xst;
+    _tmat(2,2) = z*z*mct + ct;
+    _tmat(2,3) = t[2];
 
-    tmat(3,0) = 0.0f;
-    tmat(3,1) = 0.0f;
-    tmat(3,2) = 0.0f;
-    tmat(3,3) = 1.0f;
-}   // end _initMatrix
-
-}   // end namespace
-
-
-Transformer::Transformer( float rads, const Vec3f& axis, const Vec3f& t)
-{
-    _initMatrix( rads, axis, t, _tmat);
+    _tmat(3,0) = 0.0f;
+    _tmat(3,1) = 0.0f;
+    _tmat(3,2) = 0.0f;
+    _tmat(3,3) = 1.0f;
 }   // end ctor
 
 
@@ -109,7 +99,7 @@ void Transformer::prependTranslation( const Vec3f& t)
 {
     Mat4f T = Mat4f::Identity();
     T.block<3,1>(0,3) = t;
-    _tmat = _tmat * T;  // Note that this prepends because applied transform will be (_tmat * T * v) for some vector v
+    _tmat = _tmat * T;  // Prepends because applied transform will be (_tmat * T * v) for some vector v
 }   // end prependTranslation
 
 
@@ -133,13 +123,6 @@ Vec3f Transformer::transform( const Vec3f& v) const
 }   // end transform
 
 
-void Transformer::rotate( Vec3f& v) const
-{
-    v = _tmat.block<3,3>(0,0) * v;
-}   // end rotate
+void Transformer::rotate( Vec3f& v) const { v = _tmat.block<3,3>(0,0) * v;}
 
-
-Vec3f Transformer::rotate( const Vec3f& v) const
-{
-    return _tmat.block<3,3>(0,0) * v;
-}   // end rotate
+Vec3f Transformer::rotate( const Vec3f& v) const { return _tmat.block<3,3>(0,0) * v;}

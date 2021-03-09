@@ -39,21 +39,26 @@ using FeatMat = Eigen::Matrix<float, Eigen::Dynamic, 6>;
 using FaceMat = Eigen::Matrix<int, Eigen::Dynamic, 3>;
 
 using Mat3f = Eigen::Matrix3f;
-using Mat3d = Eigen::Matrix3d;
 using Mat4f = Eigen::Matrix4f;
-using Mat4d = Eigen::Matrix4d;
 using MatXf = Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic>;
+using Mat3d = Eigen::Matrix3d;
+using Mat4d = Eigen::Matrix4d;
 using MatXd = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>;
 
 using Vec2i = Eigen::Vector2i;
 using Vec3i = Eigen::Vector3i;
+using Vec4i = Eigen::Vector4i;
+using Vec5i = Eigen::Matrix<int, 5, 1>;
+using Vec6i = Eigen::Matrix<int, 6, 1>;
 using Vec2f = Eigen::Vector2f;
-using Vec2d = Eigen::Vector2d;
 using Vec3f = Eigen::Vector3f;
-using Vec3d = Eigen::Vector3d;
 using Vec4f = Eigen::Vector4f;
-using Vec4d = Eigen::Vector4d;
+using Vec5f = Eigen::Matrix<float, 5, 1>;
 using Vec6f = Eigen::Matrix<float, 6, 1>;
+using Vec2d = Eigen::Vector2d;
+using Vec3d = Eigen::Vector3d;
+using Vec4d = Eigen::Vector4d;
+using Vec5d = Eigen::Matrix<double, 5, 1>;
 using Vec6d = Eigen::Matrix<double, 6, 1>;
 
 using VecXi = Eigen::VectorXi;

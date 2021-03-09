@@ -37,7 +37,11 @@ public:
     explicit Colour( const float*);
     explicit Colour( const double*);
 
-    double& operator[]( int);
+    // Return the RGB components as values in [0,255]
+    int ired() const;
+    int igreen() const;
+    int iblue() const;
+
     const double& operator[]( int) const;
 
     static Colour hsv2rgb( const Colour&);
@@ -51,6 +55,8 @@ public:
 
 private:
     double _vals[3];
+    double& operator[]( int);
+    void _set( double, double, double);
 };  // end class
 
 }   // end namespace

@@ -22,59 +22,34 @@
 #include <algorithm>
 using r3d::Colour;
 
-
-Colour::Colour()
+void Colour::_set( double x, double y, double z)
 {
-    _vals[0] = _vals[1] = _vals[2] = 0;
-}   // end ctor
+    _vals[0] = std::max( 0.0, std::min( x, 0.999));
+    _vals[1] = std::max( 0.0, std::min( y, 0.999));
+    _vals[2] = std::max( 0.0, std::min( z, 0.999));
+}   // end _set
 
 
-Colour::Colour( int x, int y, int z)
-{
-    _vals[0] = double(x)/255;
-    _vals[1] = double(y)/255;
-    _vals[2] = double(z)/255;
-}   // end ctor
+Colour::Colour() { _vals[0] = _vals[1] = _vals[2] = 0;}
+Colour::Colour( int x, int y, int z) { _set( double(x)/256, double(y)/256, double(z)/256);}
+Colour::Colour( size_t x, size_t y, size_t z) { _set( double(x)/256, double(y)/256, double(z)/256);}
+Colour::Colour( double x, double y, double z) { _set( x, y, z);}
+Colour::Colour( const float *v) { _set(v[0], v[1], v[2]);}
+Colour::Colour( const double *v) { _set(v[0], v[1], v[2]);} 
+
+int Colour::ired() const { return int(_vals[0] * 256);}
+int Colour::igreen() const { return int(_vals[1] * 256);}
+int Colour::iblue() const { return int(_vals[2] * 256);}
 
 
-Colour::Colour( size_t x, size_t y, size_t z)
-{
-    _vals[0] = double(x)/255;
-    _vals[1] = double(y)/255;
-    _vals[2] = double(z)/255;
-}   // end ctor
-
-
-Colour::Colour( double x, double y, double z)
-{
-    _vals[0] = x;
-    _vals[1] = y;
-    _vals[2] = z;
-}   // end ctor
-
-
-Colour::Colour( const float *v)
-{
-    _vals[0] = v[0];
-    _vals[1] = v[1];
-    _vals[2] = v[2];
-}   // end ctor
-
-
-Colour::Colour( const double *v)
-{
-    memcpy( _vals, v, 3*sizeof(double));
-}   // end ctor
-
-
-double& Colour::operator[]( int i)
+const double& Colour::operator[]( int i) const
 {
     assert( i >= 0 && i < 3);
     return _vals[i];
 }   // end operator[]
 
 
-const double& Colour::operator[]( int i) const
+double& Colour::operator[]( int i)
 {
     assert( i >= 0 && i < 3);
     return _vals[i];
@@ -113,11 +88,7 @@ Colour Colour::hsv2rgb( const Colour &hsv)
         case 5: r = v, g = p, b = q; break;
     }   // end switch
 
-    Colour rgb;
-    rgb[0] = r;
-    rgb[1] = g;
-    rgb[2] = b;
-    return rgb;
+    return Colour( r, g, b);
 }   // end hsv2rgb
 
 
