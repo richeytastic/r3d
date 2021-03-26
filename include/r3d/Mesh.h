@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2020 Richard Palmer
+ * Copyright (C) 2021 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -631,11 +631,11 @@ public:
     int oppositeFace( int fid, int v0, int v1) const;
 
     /**
-     * Create the Eigen feature and face matrices from this object. Note that if using r3d::Curvature,
-     * it will be more efficient to use the normals from there rather than recalculating them again here.
-     * The vertex positions copied over are the UNTRANSFORMED positions unless useTransformed is true.
+     * Create the Eigen feature matrix from this object. Note that if using r3d::Curvature,
+     * it is more efficient to use those normals rather than recalculating them again here.
+     * The vertices copied over have UNTRANSFORMED positions unless useTransformed is true.
      */
-    FeatMat toFeatures( FaceMat&, bool useTransformed=false) const;
+    MatX6f toFeatures( bool useTransformed=false) const;
 
     /**
      * Create and return the face matrix from this mesh's face topology.

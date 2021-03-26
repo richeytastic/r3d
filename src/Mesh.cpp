@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2020 Richard Palmer
+ * Copyright (C) 2021 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ using r3d::Vec3f;
 using r3d::Vec3d;
 using r3d::Mat4f;
 using r3d::MatX3f;
-using r3d::FeatMat;
+using r3d::MatX6f;
 using r3d::FaceMat;
 
 
@@ -387,8 +387,9 @@ bool Mesh::_checkNewVertex( const Vec3f &V, Vec3f &v) const
         return false;
     }   // end if
 
-    v = V;
-    if ( !hasFixedTransform())
+    if ( hasFixedTransform())
+        v = V;
+    else
     {
         v = transform( _imat, V);
 #ifndef NDEBUG
@@ -1635,7 +1636,7 @@ void Mesh::showDebug( bool withDetails) const
 MatX3f Mesh::vertices2Matrix( bool useTransformed) const
 {
     assert( hasSequentialVertexIds());
-    const int N = int(numVtxs());
+    const int N = (int)numVtxs();
     MatX3f M(N, 3);
     if ( useTransformed)
     {
@@ -1651,14 +1652,14 @@ MatX3f Mesh::vertices2Matrix( bool useTransformed) const
 }   // end vertices2Matrix
 
 
-FeatMat Mesh::toFeatures( FaceMat &H, bool useTransformed) const
+MatX6f Mesh::toFeatures( bool useTransformed) const
 {
     assert( hasSequentialVertexIds());
     assert( hasSequentialFaceIds());
 
     // Copy in vertex positions and zero out the normal region
-    const int N = int(numVtxs());
-    FeatMat F(N, 6);
+    const int N = (int)numVtxs();
+    MatX6f F(N, 6);
 
     if ( useTransformed)
     {
@@ -1674,18 +1675,16 @@ FeatMat Mesh::toFeatures( FaceMat &H, bool useTransformed) const
     for ( int i = 0; i < N; ++i)
         F.block<1,3>(i,3) = Vec3f::Zero();
 
-    // Copy in face vertex IDs in stored order and calculate and insert the weighted vertex normals
-    const int M = int(numFaces());
-    H = FaceMat( M, 3);
+    // Copy in face vertex IDs in stored order and calc and insert weighted vertex normals
+    const int M = (int)numFaces();
     for ( int i = 0; i < M; ++i)
     {
-        const Vec3iMap fvids = asEigen(fvidxs(i));
-        H.row(i) = fvids;
+        const int *fvids = fvidxs(i);
         const Vec3f& vA = F.block<1,3>( fvids[0], 0);
         const Vec3f& vB = F.block<1,3>( fvids[1], 0);
         const Vec3f& vC = F.block<1,3>( fvids[2], 0);
 
-        // Calculate area weighted triangle norm (magnitude is twice triangle's area)
+        // Calc area weighted triangle norm (magnitude is twice triangle's area)
         const Vec3f fnrm = (vB - vA).cross( vC - vB);
 
         // Add back to the associated vertices
@@ -1705,13 +1704,10 @@ FeatMat Mesh::toFeatures( FaceMat &H, bool useTransformed) const
 FaceMat Mesh::toFaces() const
 {
     assert( hasSequentialFaceIds());
-    const int M = int(numFaces());
+    const int M = (int)numFaces();
     FaceMat H( M, 3);
     for ( int i = 0; i < M; ++i)
-    {
-        const int* fvids = fvidxs(i);
-        H.row(i) << fvids[0], fvids[1], fvids[2];
-    }   // end for
+        H.row(i) = asEigen(fvidxs(i));
     return H;
 }   // end toFaces
 

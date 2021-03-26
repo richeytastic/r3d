@@ -79,7 +79,11 @@ Vec3f rotateAboutAxis( const Vec3f &pos, Vec3f axis, float degs)
 }   // end namespace
 
 
-void CameraParams::rotate( float degs) { _pos = rotateAboutAxis( _pos, _upv, degs);}
+void CameraParams::rotate( float degs)
+{
+    const Vec3f npos = rotateAboutAxis( _pos, _upv, degs);
+    set( _foc, npos);
+}   // end rotate
 
 
 void CameraParams::tilt( float degs)
@@ -87,7 +91,8 @@ void CameraParams::tilt( float degs)
     Vec3f cvec = _pos - _foc;
     cvec.normalize();
     const Vec3f rvec = cvec.cross(_upv);
-    _pos = rotateAboutAxis( _pos, rvec, degs);
+    const Vec3f npos = rotateAboutAxis( _pos, rvec, degs);
+    set( _foc, npos);
 }   // end tilt
 
 

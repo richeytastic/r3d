@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2019 Richard Palmer
+ * Copyright (C) 2021 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ namespace r3d {
  * with the first three columns being the point's position, and the last
  * three columns being the point's normal vector.
  */
-using FeatMat = Eigen::Matrix<float, Eigen::Dynamic, 6>;
+using MatX6f = Eigen::Matrix<float, Eigen::Dynamic, 6>;
 
 /**
  * A face matrix has rows for each face (sequentially ordered IDs)

@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2019 Richard Palmer
+ * Copyright (C) 2021 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,16 +19,16 @@
 #include <opencv2/surface_matching/icp.hpp>
 #include <opencv2/core/eigen.hpp>
 using r3d::PPFMatcher;
-using r3d::FeatMat;
+using r3d::MatX6f;
 using r3d::Mat4f;
 
 
-PPFMatcher::PPFMatcher( const FeatMat& m) : _tgt( m)
+PPFMatcher::PPFMatcher( const MatX6f& m) : _tgt( m)
 {
 }   // end ctor
 
 
-Mat4f PPFMatcher::operator()( const FeatMat &s) const
+Mat4f PPFMatcher::operator()( const MatX6f &s) const
 {
     assert( s.cols() == _tgt.cols());
     cv::Mat src, tgt;

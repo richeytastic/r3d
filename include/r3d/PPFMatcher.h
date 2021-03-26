@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2019 Richard Palmer
+ * Copyright (C) 2021 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,13 +30,13 @@ namespace r3d {
 class r3d_EXPORT PPFMatcher
 {
 public:
-    explicit PPFMatcher( const FeatMat&);
+    explicit PPFMatcher( const MatX6f&);
 
-    // Calculate and return the transform to map the given vertices to the constructor target object using ICP.
-    Mat4f operator()( const FeatMat&) const;
+    // Calculate and return transform to map given vertices to the constructor target object using ICP.
+    Mat4f operator()( const MatX6f&) const;
 
 private:
-    const FeatMat &_tgt;
+    const MatX6f &_tgt;
 };  // end class
 
 }   // end namespace
