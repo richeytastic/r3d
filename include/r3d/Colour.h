@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2020 Richard Palmer
+ * Copyright (C) 2021 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 #define R3D_COLOUR_H
 
 #include "r3d_Export.h"
+#include <functional>
 #include <cstdlib>
 
 namespace r3d {
@@ -43,6 +44,7 @@ public:
     int iblue() const;
 
     const double& operator[]( int) const;
+    bool operator==( const Colour&) const;
 
     static Colour hsv2rgb( const Colour&);
     static Colour rgb2hsv( const Colour&);
@@ -58,6 +60,8 @@ private:
     double& operator[]( int);
     void _set( double, double, double);
 };  // end class
+
+struct r3d_EXPORT HashColour : std::unary_function<Colour, size_t> { size_t operator()( const Colour&) const;};
 
 }   // end namespace
 

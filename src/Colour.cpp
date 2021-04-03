@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2020 Richard Palmer
+ * Copyright (C) 2021 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 #include <cfloat>
 #include <cstring>
 #include <algorithm>
+#include <boost/functional/hash.hpp>
 using r3d::Colour;
 
 void Colour::_set( double x, double y, double z)
@@ -47,6 +48,14 @@ const double& Colour::operator[]( int i) const
     assert( i >= 0 && i < 3);
     return _vals[i];
 }   // end operator[]
+
+
+bool Colour::operator==( const Colour &col) const
+{
+    return ired() == col.ired()
+        && igreen() == col.igreen()
+        && iblue() == col.iblue();
+}   // end operator==
 
 
 double& Colour::operator[]( int i)
@@ -129,3 +138,13 @@ Colour Colour::rgb2hsv( const Colour &rgb)
 
     return hsv;
 }   // end rgb2hsv
+
+
+size_t r3d::HashColour::operator()( const Colour &col) const
+{
+    size_t seed = 0;
+    boost::hash_combine( seed, col.ired());
+    boost::hash_combine( seed, col.igreen());
+    boost::hash_combine( seed, col.iblue());
+    return seed;
+}   // end operator()
