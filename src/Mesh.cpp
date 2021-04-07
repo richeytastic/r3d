@@ -1513,7 +1513,7 @@ int Mesh::oppositeFace( int fid, int vi, int vj) const
 
 const IntSet &Mesh::faces( int vi) const
 {
-    if ( _vtxs.count(vi) == 0)
+    if ( _v2f.count(vi) == 0)
         return EMPTY_INT_SET;
     return _v2f.at(vi);
 }   // end faces

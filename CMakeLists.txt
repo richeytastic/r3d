@@ -22,7 +22,6 @@ set( INCLUDE_FILES
     "${INCLUDE_F}/Bounds.h"
     "${INCLUDE_F}/CameraParams.h"
     #"${INCLUDE_F}/Cleaner.h"
-    "${INCLUDE_F}/Colour.h"
     "${INCLUDE_F}/Copier.h"
     "${INCLUDE_F}/Curvature.h"
     "${INCLUDE_F}/CurvatureMetrics.h"
@@ -76,7 +75,6 @@ set( SRC_FILES
     ${SRC_DIR}/Bounds
     ${SRC_DIR}/CameraParams
     #${SRC_DIR}/Cleaner
-    ${SRC_DIR}/Colour
     ${SRC_DIR}/Copier
     ${SRC_DIR}/Curvature
     ${SRC_DIR}/CurvatureMetrics
