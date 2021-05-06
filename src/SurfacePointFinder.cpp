@@ -44,15 +44,15 @@ struct FaceFinder
             const int *vidxs = _mesh.fvidxs(fid); // Check adjacent polygons
 
             const int f0 = _mesh.oppositeFace( fid, vidxs[0], vidxs[1]);
-            if ( _sfids.count(f0) == 0 && _mesh.isVertexInsideFace(f0,u))
+            if ( _sfids.count(f0) == 0)
                 find( f0);
 
             const int f1 = _mesh.oppositeFace( fid, vidxs[1], vidxs[2]);
-            if ( _sfids.count(f1) == 0 && _mesh.isVertexInsideFace(f1,u))
+            if ( _sfids.count(f1) == 0)
                 find( f1);
 
             const int f2 = _mesh.oppositeFace( fid, vidxs[2], vidxs[0]);
-            if ( _sfids.count(f2) == 0 && _mesh.isVertexInsideFace(f2,u))
+            if ( _sfids.count(f2) == 0)
                 find( f2);
         }   // end if
 
