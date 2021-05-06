@@ -127,6 +127,9 @@ int Face::index( int vidx) const
 }   // end index
 
 
+bool Face::has( int vidx) const { return index(vidx) >= 0;}
+
+
 size_t r3d::HashFace::operator()( const Face& u) const
 {
     int v0 = u[0];

@@ -1337,111 +1337,83 @@ Vec3f Mesh::projectToFacePlane( int fid, const Vec3f &P) const
 }   // end projectToFacePlane
 
 
-Vec3f Mesh::nearestPositionWithinFace( int fid, const Vec3f &inP) const
+namespace {
+
+Vec3f orthogonalPosition( const Vec3f &a, const Vec3f &b, const Vec3f &p)
 {
-    Vec3f P = projectToFacePlane( fid, inP); // Don't assume inP is in the plane of the face.
-    // If P is now inside the face, then we're done: P is the projected point.
-    if ( isVertexInsideFace( fid, P))
-        return P;
+    if ( a == b)
+        return a;
+
+    const Vec3f ab = b - a;
+    const float abnorm = ab.norm();
+    const Vec3f ap = p - a;
+    const float m = ab.dot(ap);
+    if ( m <= 0.0f)
+        return a;
+
+    const float abnorm2 = abnorm * abnorm;
+    if ( m >= abnorm2)
+        return b;
+
+    return a + (m/abnorm2)*ab;
+}   // end orthogonalPosition
+
+}   // end namespace
+
+
+Vec3f Mesh::nearestPositionWithinFace( int fid, const Vec3f &inp) const
+{
+    const Vec3f p = projectToFacePlane( fid, inp); // Don't assume inp is in the plane of the face.
+    // If p is now inside the face, then we're done: p is the projected point.
+    if ( isVertexInsideFace( fid, p))
+        return p;
 
     const int *vidxs = fvidxs(fid);
-    const Vec3f &A = vtx( vidxs[0]);
-    const Vec3f &B = vtx( vidxs[1]);
-    const Vec3f &C = vtx( vidxs[2]);
-
-    // P is coplanar with the face but outside of it. Find the vertex (X) it's closest to.
-    const Vec3f pa = P-A;
-    const Vec3f pb = P-B;
-    const Vec3f pc = P-C;
-
-    // Assume P is closest to A initially
-    const Vec3f *X = &A;
-    float best_l2sq = pa.squaredNorm();
-
-    // Is P actually closer to B?
-    const float l2sq_pb = pb.squaredNorm();
-    if ( l2sq_pb < best_l2sq)
+    const Vec3f &a = vtx( vidxs[0]);
+    const Vec3f &b = vtx( vidxs[1]);
+    const Vec3f &c = vtx( vidxs[2]);
+    const Vec3f x0 = orthogonalPosition( a, b, p);
+    const Vec3f x1 = orthogonalPosition( b, c, p);
+    const Vec3f x2 = orthogonalPosition( c, a, p);
+    float d0 = (p - x0).squaredNorm();
+    const float d1 = (p - x1).squaredNorm();
+    const float d2 = (p - x2).squaredNorm();
+    const Vec3f *bx = &x0;
+    if ( d1 < d0)
     {
-        best_l2sq = l2sq_pb;
-        X = &B;
+        bx = &x1;
+        d0 = d1;
     }   // end if
-
-    // Is P actually closer to C?
-    const float l2sq_pc = pc.squaredNorm();
-    if ( l2sq_pc < best_l2sq)
-        X = &C;
-
-    // Get the other two normalised edge vectors of the triangle rooted at x as ei and ej
-    Vec3f ei, ej;
-    if ( X == &A)
-    {
-        ei = B-A;
-        ej = C-A;
-    }   // end if
-    else if ( X == &B)
-    {
-        ei = C-B;
-        ej = A-B;
-    }   // end else if
-    else
-    {
-        ei = A-C;
-        ej = B-C;
-    }   // end else
-
-    ei.normalize();
-    ej.normalize();
-
-    // Difference vector of P with the closest vertex on the triangle
-    const Vec3f px = P - *X;
-
-    // Project px onto edge vectors ei and ej to find where it intersects on both edges.
-    // Note that the intersection point along e{i,j} can NEVER be beyond its length otherwise
-    // X would have been chosen as that vertex endpoint of e{i,j}.
-    // If the intersection point on both edges is negative, then the closest position on
-    // the triangle to P is vertex X.
-    // If the intersection point is positive only on one edge, then the closest point is
-    // that projected position along the edge.
-    // If the intersection point is positive for both edges, then the closest point is
-    // the nearest to P of the two projected positions along the edges.
-    // These conditions can be simplified into the following expressions which uses the
-    // longer of the two projections along the edge vectors to determine which edge P is closer to.
-    const float pxi = std::max( 0.0f, px.dot(ei));
-    const float pxj = std::max( 0.0f, px.dot(ej));
-
-    // Whichever of {pxi,pxj} is greater indicates the closer edge vector. Of course, both of them
-    // might have projection values of zero, but then this just returns *X which is correct.
-    if ( pxi > pxj)
-        return *X + pxi*ei;
-
-    return *X + pxj*ej;
+    if ( d2 < d0)
+        bx = &x2;
+    return *bx;
 }   // end nearestPositionWithinFace
 
 
 namespace {
-double calcTwiceArea( const Vec3d &a, const Vec3d &b, const Vec3d &c)
+float calcTwiceArea( const Vec3f &a, const Vec3f &b, const Vec3f &c)
 {
     return (a-b).cross(b-c).norm();
 }   // end calcTwiceArea
 }   // end namespace
 
 
-bool Mesh::isVertexInsideFace( int fid, const Vec3f &fP) const
+bool Mesh::isVertexInsideFace( int fid, const Vec3f &P) const
 {
     const int *vidxs = fvidxs( fid);
-    const Vec3d A = vtx( vidxs[0]).cast<double>();
-    const Vec3d B = vtx( vidxs[1]).cast<double>();
-    const Vec3d C = vtx( vidxs[2]).cast<double>();
-    const Vec3d P = fP.cast<double>();
+    const Vec3f &A = vtx( vidxs[0]);
+    const Vec3f &B = vtx( vidxs[1]);
+    const Vec3f &C = vtx( vidxs[2]);
 
     // All twice the areas of the respective triangles so division by 2 for all not necessary.
-    const double areaABC = calcTwiceArea( A,B,C);
-    const double areaPAB = calcTwiceArea( P,A,B);
-    const double areaPBC = calcTwiceArea( P,B,C);
-    const double areaPCA = calcTwiceArea( P,C,A);
+    const float areaPAB = calcTwiceArea( P,A,B);
+    const float areaPBC = calcTwiceArea( P,B,C);
+    const float areaPCA = calcTwiceArea( P,C,A);
 
-    // This only works if P is in the plane of fid.
-    return fabs(areaPAB + areaPBC + areaPCA - areaABC) <= 1e-4;
+    const float areaABC = calcTwiceArea( A,B,C);
+
+    static const float EPS = 1e-3f;
+    return (areaPAB + areaPBC + areaPCA) <= areaABC + EPS; // Only works if P is in the plane of fid.
 }   // end isVertexInsideFace
 
 

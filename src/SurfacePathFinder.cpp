@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2019 Richard Palmer
+ * Copyright (C) 2021 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -88,17 +88,73 @@ float SurfacePathFinder::findPath( const Vec3f& spos, const Vec3f& fpos)
 }   // end findPath
 
 
-float SurfacePathFinder::calcPathLength( const std::vector<Vec3f>& path)
+float r3d::calcPathLength( const std::vector<Vec3f>& path)
 {
     float psum = 0;
     if ( !path.empty())
     {
-        Vec3f tv = path.front();
+        const Vec3f *tv = &path.front();
         for ( const Vec3f& v : path)
         {
-            psum += (v - tv).norm();
-            tv = v;
+            psum += (v - *tv).norm();
+            tv = &v;
         }   // end for
     }   // end if
     return psum;
 }   // end calcPathLength
+
+
+namespace {
+
+int findFace( const r3d::Mesh& mesh, const Vec3f& pos, int &vid)
+{
+    r3d::SurfacePointFinder spf( mesh);
+    int fid;
+    Vec3f v;
+    spf.find( pos, vid, fid, v);
+    return fid;
+}   // end findFace
+
+
+int findBestFace( const r3d::Mesh& mesh, int v0, const Vec3f& p1)
+{
+    assert( v0 >= 0);
+    const Vec3f& p0 = mesh.vtx(v0);
+    Vec3f dv = p1 - p0;            // Local direction vector to p1
+    dv.normalize();
+    const IntSet& fids = mesh.faces( v0);  // Get the faces that are attached
+    int bfid = *fids.begin();
+    float bdp = -1.0f;
+
+    for ( int fid : fids)
+    {
+        int v1, v2;
+        mesh.face( fid).opposite( v0, v1, v2);
+        Vec3f fv = 0.5f * (mesh.vtx(v1) + mesh.vtx(v2)) - p0;
+        fv.normalize();
+        const float dp = fv.dot(dv);
+        if ( dp > bdp)
+        {
+            bdp = dp;
+            bfid = fid;
+        }   // end if
+    }   // end for
+
+    return bfid;
+}   // end findBestFace
+
+}   // end namespace
+
+
+void r3d::findInitialFaces( const r3d::KDTree& kdt, const Vec3f &p0, int &f0, const Vec3f &p1, int &f1)
+{
+    const Mesh &mesh = kdt.mesh();
+    int v0 = kdt.find(p0);
+    int v1 = kdt.find(p1);
+    f0 = findFace( mesh, p0, v0);
+    if ( f0 < 0)    // Try to find a viable starting facet for point 0
+        f0 = findBestFace( mesh, v0, p1);
+    f1 = findFace( mesh, p1, v1);
+    if ( f1 < 0)    // Try to find a viable starting facet for point 1
+        f1 = findBestFace( mesh, v1, p0);
+}   // end findInitalFaces

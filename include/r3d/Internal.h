@@ -58,6 +58,9 @@ struct r3d_EXPORT Face
     // Returns the index of vidx (0,1, or 2) as stored in this poly or -1 if not found.
     int index( int vidx) const;
 
+    // Returns true if this face has the given vertex.
+    bool has( int vidx) const;
+
     // Face are the same if they share the same vertices even if they're differently ordered.
     bool operator==( const Face&) const;
 

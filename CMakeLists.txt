@@ -30,25 +30,22 @@ set( INCLUDE_FILES
     "${INCLUDE_F}/FaceAngles.h"
     "${INCLUDE_F}/FaceInterpolator.h"
     "${INCLUDE_F}/FaceParser.h"
-    "${INCLUDE_F}/FacePlane.h"
+    "${INCLUDE_F}/FacetCut.h"
     #"${INCLUDE_F}/FaceRemover.h"
     "${INCLUDE_F}/FaceUnfolder.h"
     "${INCLUDE_F}/FaceUnfoldingVertexSearcher.h"
     "${INCLUDE_F}/FastMarcher.h"
     "${INCLUDE_F}/FrontFinder.h"
     "${INCLUDE_F}/FunctionMapper.h"
-    "${INCLUDE_F}/GlobalPlaneSlicingPath.h"
     "${INCLUDE_F}/HoleFiller.h"
     "${INCLUDE_F}/Image.h"
     "${INCLUDE_F}/Internal.h"
-    "${INCLUDE_F}/IterativeSurfacePathFinder.h"
     "${INCLUDE_F}/KDTree.h"
-    "${INCLUDE_F}/LocalPlaneSlicingPath.h"
     "${INCLUDE_F}/Manifolds.h"
     "${INCLUDE_F}/Mesh.h"
     "${INCLUDE_F}/Orientation.h"
     "${INCLUDE_F}/PatchBendingEnergy.h"
-    "${INCLUDE_F}/PlaneSlicingPath.h"
+    "${INCLUDE_F}/PlanarSlicingPath.h"
     "${INCLUDE_F}/ProcrustesSuperimposition.h"
     "${INCLUDE_F}/PPFMatcher.h"
     "${INCLUDE_F}/Reflector.h"
@@ -57,8 +54,7 @@ set( INCLUDE_FILES
     "${INCLUDE_F}/Slicer.h"
     "${INCLUDE_F}/Smoother.h"
     "${INCLUDE_F}/SurfaceCurveFinder.h"
-    "${INCLUDE_F}/SurfaceGlobalPlanePathFinder.h"
-    "${INCLUDE_F}/SurfaceLocalPlanePathFinder.h"
+    "${INCLUDE_F}/SurfacePlanarPathFinder.h"
     "${INCLUDE_F}/SurfacePathFinder.h"
     "${INCLUDE_F}/SurfacePointFinder.h"
     "${INCLUDE_F}/TetrahedronReplacer.h"
@@ -83,7 +79,7 @@ set( SRC_FILES
     ${SRC_DIR}/FaceAngles
     ${SRC_DIR}/FaceInterpolator
     ${SRC_DIR}/FaceParser
-    ${SRC_DIR}/FacePlane
+    ${SRC_DIR}/FacetCut
     #${SRC_DIR}/FaceRemover
     ${SRC_DIR}/FaceUnfolder
     ${SRC_DIR}/FaceUnfoldingVertexSearcher
@@ -93,14 +89,12 @@ set( SRC_FILES
     ${SRC_DIR}/HoleFiller
     ${SRC_DIR}/Image
     ${SRC_DIR}/Internal
-    ${SRC_DIR}/IterativeSurfacePathFinder
     ${SRC_DIR}/KDTree
-    ${SRC_DIR}/LocalPlaneSlicingPath
     ${SRC_DIR}/Manifolds
     ${SRC_DIR}/Mesh
     ${SRC_DIR}/Orientation
     ${SRC_DIR}/PatchBendingEnergy
-    ${SRC_DIR}/PlaneSlicingPath
+    ${SRC_DIR}/PlanarSlicingPath
     ${SRC_DIR}/ProcrustesSuperimposition
     ${SRC_DIR}/PPFMatcher
     ${SRC_DIR}/Reflector
@@ -109,8 +103,7 @@ set( SRC_FILES
     ${SRC_DIR}/Slicer
     ${SRC_DIR}/Smoother
     ${SRC_DIR}/SurfaceCurveFinder
-    ${SRC_DIR}/SurfaceGlobalPlanePathFinder
-    ${SRC_DIR}/SurfaceLocalPlanePathFinder
+    ${SRC_DIR}/SurfacePlanarPathFinder
     ${SRC_DIR}/SurfacePathFinder
     ${SRC_DIR}/SurfacePointFinder
     ${SRC_DIR}/TetrahedronReplacer
