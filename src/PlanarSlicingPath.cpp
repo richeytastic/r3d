@@ -32,7 +32,8 @@ PlanarSlicingPath::PlanarSlicingPath( const Mesh& m, int ifid, const Vec3f& v0,
 int PlanarSlicingPath::_setEdgeCrossing( int fid)
 {
     // Cut this facet
-    const FacetCut fc( _mesh, fid, _vtxs.back(), _facetSlicePlaneFn( fid));
+    const Vec3f u = _facetSlicePlaneFn( fid);
+    const FacetCut fc( _mesh, fid, _vtxs.back(), u);
     if ( fc.half() != 0)
         return -1;
 

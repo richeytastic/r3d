@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2019 Richard Palmer
+ * Copyright (C) 2021 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -86,8 +86,9 @@ float SurfacePointFinder::find( const Vec3f& t, int& vidx, int& fid, Vec3f& fv) 
     }   // end if
     else
     {
+        fid = *_mesh.faces(vidx).begin();
         FaceFinder pfinder( _mesh, t);
-        sd = pfinder.find( *_mesh.faces(vidx).begin());
+        sd = pfinder.find( fid);
         fv = pfinder.vertex();
         fid = pfinder.poly();
         vidx = -1;

@@ -31,25 +31,29 @@ SurfacePlanarPathFinder::SurfacePlanarPathFinder( const r3d::KDTree& k, const Ve
 }   // end ctor
 
 
-float SurfacePlanarPathFinder::findPath( const Vec3f& spos, const Vec3f& fpos)
+float SurfacePlanarPathFinder::findPath( const Vec3f& v0, const Vec3f& v1)
 {
     int f0, f1;
-    findInitialFaces( _kdt, spos, f0, fpos, f1);
+    findInitialFaces( _kdt, v0, f0, v1, f1);
+    /*
+    std::cerr << "Init faces " << v0.transpose() << " on " << f0 << ", "
+                               << v1.transpose() << " on " << f1 << std::endl;
+    */
     float plen = FLT_MAX;
     // If start and end vertices are on same facet, the returned
     // list of points is simply the start and end vertex
     if ( f0 == f1)
     {
-        _lpath = {spos,fpos};
-        plen = (fpos - spos).norm();
+        _lpath = {v0,v1};
+        plen = (v1 - v0).norm();
     }   // end if
     else
     {
-        Vec3f n = _u.cross(fpos-spos);
+        Vec3f n = _u.cross(v1-v0);
         assert( !n.isZero());
         n.normalize();
-        PlanarSlicingPath path( _kdt.mesh(), f0, spos, f1, fpos, [&n](int){ return n;});
-        _lpath = path.shortestPath( &plen);
+        const std::function<Vec3f(int)> fn = [=](int){ return n;};
+        _lpath = PlanarSlicingPath( _kdt.mesh(), f0, v0, f1, v1, fn).shortestPath( &plen);
     }   // end else
 
     return plen;
