@@ -35,10 +35,6 @@ float SurfacePlanarPathFinder::findPath( const Vec3f& v0, const Vec3f& v1)
 {
     int f0, f1;
     findInitialFaces( _kdt, v0, f0, v1, f1);
-    /*
-    std::cerr << "Init faces " << v0.transpose() << " on " << f0 << ", "
-                               << v1.transpose() << " on " << f1 << std::endl;
-    */
     float plen = FLT_MAX;
     // If start and end vertices are on same facet, the returned
     // list of points is simply the start and end vertex
