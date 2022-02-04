@@ -112,7 +112,7 @@ cv::Point2f CameraParams::project( const Vec3f& t) const
     const float tx = rightVec.dot(rt); // Amount right (+X) (real world coord metric)
 
     // The view plane is assumed here to have unit height (can be scaled later by client)
-    const float rfov = float( EIGEN_PI * _fov / 180);  // Convert degrees to radians
+    const float rfov = fovRads();
     const float focLen = 0.5f/tanf(rfov/2);
 
     const float realDistance = distance( t);
@@ -152,7 +152,7 @@ void CameraParams::setFoV( float v)
 }   // end setFoV
 
 
-void CameraParams::setViewRadius( float r) { _fov = atan2f( r, distance());}
+void CameraParams::setViewRadius( float r) { setFoV( (180.0/EIGEN_PI) * atan2f( r, distance()));}
 
 
 float CameraParams::fovRads() const { return float(_fov * EIGEN_PI/180);}
