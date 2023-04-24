@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2019 Richard Palmer
+ * Copyright (C) 2022 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ using r3d::Mesh;
 void EdgeFaceAdder::addFaces( const std::unordered_map<int,IntSet>& xyset)
 {
     _edgeUse.clear();
-    using XYMap = std::pair<int,IntSet>;
+    using XYMap = std::pair<const int,IntSet>;
     for ( const XYMap& xys : xyset)
     {
         const int X = xys.first;

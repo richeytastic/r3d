@@ -29,7 +29,7 @@ public:
      * Vector u defines the orientation of a fixed (global) view plane of the measurement
      * (the slicing plane is defined to be orthogonal to the view plane). Vector u should be
      * linearly independent of the path vector (p1-p0) since the slicing plane's orientation
-     * is defined as u.cross(p1-p0).
+     * is defined as u.cross(p1-p0). Note that u = -u for these purposes.
      */
     SurfacePlanarPathFinder( const KDTree&, const Vec3f& u);
 

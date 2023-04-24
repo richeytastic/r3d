@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2019 Richard Palmer
+ * Copyright (C) 2022 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -129,8 +129,8 @@ private:
 r3d_EXPORT size_t hash( const Vec3f&, size_t ndp, size_t h=0);
 r3d_EXPORT size_t hash( const Vec2f&, size_t ndp, size_t h=0);
 
-struct HashFace : std::unary_function<Face, size_t> { size_t operator()( const Face&) const;};
-struct HashEdge : std::unary_function<Edge, size_t> { size_t operator()( const Edge&) const;};
+struct HashFace { size_t operator()( const Face&) const;};
+struct HashEdge { size_t operator()( const Edge&) const;};
 
 
 }   // end namespace
